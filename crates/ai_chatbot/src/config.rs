@@ -1,7 +1,7 @@
-use serde::Deserialize;
-use std::env;
 use crate::errors::ChatError;
 use crate::services::HuggingFaceConfig;
+use serde::Deserialize;
+use std::env;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct ServiceConfig {
@@ -47,19 +47,14 @@ pub struct RateLimitConfig {
 
 impl Default for CacheConfig {
     fn default() -> Self {
-        Self {
-            enabled: true,
-            ttl_seconds: 3600,
-            max_size_mb: 1024,
-        }
+        Self { enabled: true, ttl_seconds: 3600, max_size_mb: 1024 }
     }
 }
 
 impl ServiceConfig {
     pub fn from_env() -> Result<Self, ChatError> {
         let huggingface_config = HuggingFaceConfig {
-            model_name: env::var("AI_MODEL_NAME")
-                .unwrap_or_else(|_| "gpt2".to_string()),
+            model_name: env::var("AI_MODEL_NAME").unwrap_or_else(|_| "gpt2".to_string()),
             max_length: env::var("AI_MAX_LENGTH")
                 .unwrap_or_else(|_| "100".to_string())
                 .parse()
@@ -71,7 +66,9 @@ impl ServiceConfig {
             temperature: env::var("AI_TEMPERATURE")
                 .unwrap_or_else(|_| "0.7".to_string())
                 .parse()
-                .map_err(|_| ChatError::ConfigError("Invalid AI_TEMPERATURE".to_string()))?,
+                .map_err(|_| {
+                ChatError::ConfigError("Invalid AI_TEMPERATURE".to_string())
+            })?,
             top_k: env::var("AI_TOP_K")
                 .unwrap_or_else(|_| "50".to_string())
                 .parse()
@@ -108,12 +105,16 @@ impl ServiceConfig {
                 requests_per_minute: env::var("AI_SERVICE_RATE_LIMIT")
                     .unwrap_or_else(|_| "60".to_string())
                     .parse()
-                    .map_err(|_| ChatError::ConfigError("Invalid AI_SERVICE_RATE_LIMIT".to_string()))?,
+                    .map_err(|_| {
+                        ChatError::ConfigError("Invalid AI_SERVICE_RATE_LIMIT".to_string())
+                    })?,
                 max_concurrent: env::var("AI_SERVICE_MAX_CONCURRENT")
                     .unwrap_or_else(|_| "10".to_string())
                     .parse()
-                    .map_err(|_| ChatError::ConfigError("Invalid AI_SERVICE_MAX_CONCURRENT".to_string()))?,
+                    .map_err(|_| {
+                        ChatError::ConfigError("Invalid AI_SERVICE_MAX_CONCURRENT".to_string())
+                    })?,
             },
         })
     }
-} 
+}

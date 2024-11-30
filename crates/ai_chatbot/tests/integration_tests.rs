@@ -1,4 +1,4 @@
-use actix_web::{test, web, App};
+use actix_web::{App, test, web};
 use ai_chatbot::main::{chat_endpoint, metrics_endpoint};
 use serde_json::json;
 

@@ -1,5 +1,5 @@
-use thiserror::Error;
 use std::io;
+use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum AutoMLError {
@@ -75,8 +75,8 @@ impl From<anyhow::Error> for AutoMLError {
 
 // Helper function to convert errors to API responses
 pub fn error_to_response(error: AutoMLError) -> actix_web::HttpResponse {
-    use actix_web::http::StatusCode;
     use actix_web::HttpResponse;
+    use actix_web::http::StatusCode;
 
     let status = match error {
         AutoMLError::InvalidInput(_) => StatusCode::BAD_REQUEST,
@@ -87,11 +87,10 @@ pub fn error_to_response(error: AutoMLError) -> actix_web::HttpResponse {
         _ => StatusCode::INTERNAL_SERVER_ERROR,
     };
 
-    HttpResponse::build(status)
-        .json(serde_json::json!({
-            "error": error.to_string(),
-            "error_type": format!("{:?}", error),
-        }))
+    HttpResponse::build(status).json(serde_json::json!({
+        "error": error.to_string(),
+        "error_type": format!("{:?}", error),
+    }))
 }
 
 // Implement conversion for common error types
@@ -114,4 +113,4 @@ impl From<hyperopt::Error> for AutoMLError {
 }
 
 // Custom result type for automl operations
-pub type AutoMLResult<T> = Result<T, AutoMLError>; 
+pub type AutoMLResult<T> = Result<T, AutoMLError>;

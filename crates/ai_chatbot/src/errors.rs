@@ -1,70 +1,21 @@
-use thiserror::Error;
-use actix_web::{HttpResponse, ResponseError};
 use std::io;
-
-#[derive(Error, Debug)]
-pub enum ChatError {
-    #[error("Failed to connect to AI service: {0}")]
-    ConnectionError(String),
-
-    #[error("Invalid request: {0}")]
-    InvalidRequest(String),
-
-    #[error("Service configuration error: {0}")]
-    ConfigError(String),
-
-    #[error("AI model error: {0}")]
-    ModelError(String),
-
-    #[error("Rate limit exceeded: {0}")]
-    RateLimitError(String),
-
-    #[error("Internal server error: {0}")]
-    InternalError(String),
-
-    #[error(transparent)]
-    Other(#[from] anyhow::Error),
-}
-
-impl ResponseError for ChatError {
-    fn error_response(&self) -> HttpResponse {
-        match self {
-            ChatError::ConnectionError(_) => {
-                HttpResponse::ServiceUnavailable().json(self.to_string())
-            }
-            ChatError::InvalidRequest(_) => {
-                HttpResponse::BadRequest().json(self.to_string())
-            }
-            ChatError::ConfigError(_) => {
-                HttpResponse::UnprocessableEntity().json(self.to_string())
-            }
-            ChatError::ModelError(_) => {
-                HttpResponse::UnprocessableEntity().json(self.to_string())
-            }
-            ChatError::RateLimitError(_) => {
-                HttpResponse::TooManyRequests().json(self.to_string())
-            }
-            _ => HttpResponse::InternalServerError().json(self.to_string()),
-        }
-    }
-}
+use shared::SharedError;
+use thiserror::Error;
+use serde_json::json;
+use actix_web::{
+    error::ResponseError,
+    http::StatusCode,
+    HttpResponse,
+};
 
 #[derive(Error, Debug)]
 pub enum ChatbotError {
+    // Model-related errors
     #[error("Failed to initialize model: {0}")]
     ModelInitializationError(String),
 
     #[error("Error during model inference: {0}")]
     ModelError(String),
-
-    #[error("Invalid input: {0}")]
-    InvalidInput(String),
-
-    #[error("Empty response from model")]
-    EmptyResponse,
-
-    #[error("Rate limit exceeded")]
-    RateLimitExceeded,
 
     #[error("Model not loaded")]
     ModelNotLoaded,
@@ -72,34 +23,119 @@ pub enum ChatbotError {
     #[error("Context window exceeded")]
     ContextWindowExceeded,
 
-    #[error("IO error: {0}")]
-    IoError(#[from] io::Error),
+    // Request/Response errors
+    #[error("Invalid request: {0}")]
+    InvalidRequest(String),
 
-    #[error("Serialization error: {0}")]
-    SerializationError(#[from] serde_json::Error),
+    #[error("Invalid input: {0}")]
+    InvalidInput(String),
 
-    #[error("Database error: {0}")]
-    DatabaseError(String),
+    #[error("Empty response from model")]
+    EmptyResponse,
 
+    // Rate limiting
+    #[error("Rate limit exceeded")]
+    RateLimitExceeded,
+
+    // Infrastructure errors
+    #[error("Failed to connect to service: {0}")]
+    ConnectionError(String),
+
+    #[error("Network error: {0}")]
+    NetworkError(String),
+
+    // Cache errors
     #[error("Cache error: {0}")]
     CacheError(String),
 
+    // Configuration and authentication
     #[error("Configuration error: {0}")]
     ConfigError(String),
 
     #[error("Authentication error: {0}")]
     AuthError(String),
 
-    #[error("Network error: {0}")]
-    NetworkError(String),
+    // Standard error types
+    #[error("IO error: {0}")]
+    IoError(#[from] io::Error),
+
+    #[error("Serialization error: {0}")]
+    SerializationError(#[from] serde_json::Error),
+
+    // Fallback errors
+    #[error("Internal server error: {0}")]
+    InternalError(String),
 
     #[error("Unknown error: {0}")]
     Unknown(String),
+
+    #[error(transparent)]
+    Other(#[from] anyhow::Error),
+
+    #[error(transparent)]
+    Shared(#[from] SharedError),
 }
 
+impl ResponseError for ChatbotError {
+    fn error_response(&self) -> HttpResponse {
+        let (status, error_type) = match self {
+            // 400 Bad Request
+            Self::InvalidRequest(_) | Self::InvalidInput(_) => 
+                (StatusCode::BAD_REQUEST, "BAD_REQUEST"),
+
+            // 401 Unauthorized
+            Self::AuthError(_) => 
+                (StatusCode::UNAUTHORIZED, "UNAUTHORIZED"),
+
+            // 429 Too Many Requests
+            Self::RateLimitExceeded => 
+                (StatusCode::TOO_MANY_REQUESTS, "RATE_LIMIT_EXCEEDED"),
+
+            // 422 Unprocessable Entity
+            Self::ModelError(_) | Self::ConfigError(_) | Self::ContextWindowExceeded => 
+                (StatusCode::UNPROCESSABLE_ENTITY, "UNPROCESSABLE_ENTITY"),
+
+            // 503 Service Unavailable
+            Self::ConnectionError(_) | Self::ModelNotLoaded | Self::ModelInitializationError(_) => 
+                (StatusCode::SERVICE_UNAVAILABLE, "SERVICE_UNAVAILABLE"),
+
+            // 500 Internal Server Error
+            _ => (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR"),
+        };
+
+        HttpResponse::build(status).json(json!({
+            "error": {
+                "message": self.to_string(),
+                "type": error_type,
+                "details": format!("{:?}", self)
+            }
+        }))
+    }
+
+    fn status_code(&self) -> StatusCode {
+        match self {
+            Self::InvalidRequest(_) | Self::InvalidInput(_) => StatusCode::BAD_REQUEST,
+            Self::AuthError(_) => StatusCode::UNAUTHORIZED,
+            Self::RateLimitExceeded => StatusCode::TOO_MANY_REQUESTS,
+            Self::ModelError(_) | Self::ConfigError(_) | Self::ContextWindowExceeded => 
+                StatusCode::UNPROCESSABLE_ENTITY,
+            Self::ConnectionError(_) | Self::ModelNotLoaded | Self::ModelInitializationError(_) => 
+                StatusCode::SERVICE_UNAVAILABLE,
+            _ => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    }
+}
+
+// From implementations for external error types
 impl From<reqwest::Error> for ChatbotError {
     fn from(error: reqwest::Error) -> Self {
-        ChatbotError::NetworkError(error.to_string())
+        if error.is_timeout() {
+            ChatbotError::ConnectionError("Request timeout".to_string())
+        } else if error.is_connect() {
+            ChatbotError::ConnectionError("Connection failed".to_string())
+        } else {
+            ChatbotError::NetworkError(error.to_string())
+        }
     }
 }
 
@@ -109,29 +145,9 @@ impl From<redis::RedisError> for ChatbotError {
     }
 }
 
-// Implement conversion from anyhow::Error
+// Convert internal errors to ChatbotError
 impl From<anyhow::Error> for ChatbotError {
     fn from(error: anyhow::Error) -> Self {
         ChatbotError::Unknown(error.to_string())
     }
-}
-
-// Helper function to convert errors to API responses
-pub fn error_to_response(error: ChatbotError) -> actix_web::HttpResponse {
-    use actix_web::http::StatusCode;
-    use actix_web::HttpResponse;
-
-    let status = match error {
-        ChatbotError::InvalidInput(_) => StatusCode::BAD_REQUEST,
-        ChatbotError::RateLimitExceeded => StatusCode::TOO_MANY_REQUESTS,
-        ChatbotError::AuthError(_) => StatusCode::UNAUTHORIZED,
-        ChatbotError::ModelNotLoaded => StatusCode::SERVICE_UNAVAILABLE,
-        _ => StatusCode::INTERNAL_SERVER_ERROR,
-    };
-
-    HttpResponse::build(status)
-        .json(serde_json::json!({
-            "error": error.to_string(),
-            "error_type": format!("{:?}", error),
-        }))
 }

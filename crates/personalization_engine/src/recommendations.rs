@@ -52,25 +52,19 @@ mod tests {
         ];
         let filter = |pref: &String| pref.contains("M");
         let recommendations = generate_recommendations(&preferences, 3, Some(filter));
-        assert_eq!(
-            recommendations,
-            vec![
-                "Recommended item for preference: Movies",
-                "Recommended item for preference: Music"
-            ]
-        );
+        assert_eq!(recommendations, vec![
+            "Recommended item for preference: Movies",
+            "Recommended item for preference: Music"
+        ]);
     }
 
     #[test]
     fn test_generate_recommendations_limit() {
         let preferences = vec!["Item1".to_string(), "Item2".to_string(), "Item3".to_string()];
         let recommendations = generate_recommendations(&preferences, 2, None);
-        assert_eq!(
-            recommendations,
-            vec![
-                "Recommended item for preference: Item1",
-                "Recommended item for preference: Item2"
-            ]
-        );
+        assert_eq!(recommendations, vec![
+            "Recommended item for preference: Item1",
+            "Recommended item for preference: Item2"
+        ]);
     }
 }

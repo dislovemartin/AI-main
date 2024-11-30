@@ -1,4 +1,4 @@
-use actix_web::{web, App, HttpServer};
+use actix_web::{App, HttpServer, web};
 use common::config::load_config;
 use common::init_tracing;
 use dotenv::dotenv;

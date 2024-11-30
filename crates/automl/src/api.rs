@@ -1,5 +1,4 @@
-
-use actix_web::{web, HttpResponse, Responder};
+use actix_web::{HttpResponse, Responder, web};
 use anyhow::Result;
 use log::{error, info};
 use serde::{Deserialize, Serialize};

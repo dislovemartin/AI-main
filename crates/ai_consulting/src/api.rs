@@ -1,6 +1,5 @@
-
 use crate::errors::ApiError;
-use actix_web::{http::StatusCode, web, HttpResponse, ResponseError};
+use actix_web::{HttpResponse, ResponseError, http::StatusCode, web};
 use serde::Serialize;
 use thiserror::Error;
 

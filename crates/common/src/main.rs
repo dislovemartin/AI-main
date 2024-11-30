@@ -1,4 +1,4 @@
-use actix_web::{web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{App, HttpResponse, HttpServer, Responder, web};
 use tracing::{error, info};
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
 

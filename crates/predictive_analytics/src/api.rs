@@ -1,4 +1,4 @@
-use actix_web::{web, HttpResponse, Responder};
+use actix_web::{HttpResponse, Responder, web};
 use anyhow::Result;
 use common::metrics::increment_counter;
 use log::{error, info};

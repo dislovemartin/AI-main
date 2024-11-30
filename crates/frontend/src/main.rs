@@ -1,5 +1,5 @@
 use crate::errors::AppError;
-use actix_web::{post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{App, HttpResponse, HttpServer, Responder, post, web};
 use anyhow::Result;
 use env_logger::Env;
 use log::info;
@@ -24,10 +24,7 @@ async fn feedback(
     feedback: web::Json<Feedback>,
     db_pool: web::Data<PgPool>,
 ) -> Result<impl Responder, AppError> {
-    info!(
-        "Received feedback from user ID: {}",
-        feedback.user_id
-    );
+    info!("Received feedback from user ID: {}", feedback.user_id);
 
     let id = db::store_feedback(&db_pool, &feedback.user_id, &feedback.comments).await?;
 
@@ -46,9 +43,7 @@ async fn main() -> std::io::Result<()> {
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
     // Create database pool
-    let pool = db::create_pool(&database_url)
-        .await
-        .expect("Failed to create database pool");
+    let pool = db::create_pool(&database_url).await.expect("Failed to create database pool");
 
     let pool = web::Data::new(pool);
 
@@ -68,21 +63,16 @@ async fn main() -> std::io::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use actix_web::{test, App};
+    use actix_web::{App, test};
 
     #[actix_web::test]
     async fn test_feedback_handler() {
         let mut app = test::init_service(App::new().service(feedback)).await;
 
-        let payload = Feedback {
-            user_id: "user123".to_string(),
-            comments: "Great service!".to_string(),
-        };
+        let payload =
+            Feedback { user_id: "user123".to_string(), comments: "Great service!".to_string() };
 
-        let req = test::TestRequest::post()
-            .uri("/feedback")
-            .set_json(&payload)
-            .to_request();
+        let req = test::TestRequest::post().uri("/feedback").set_json(&payload).to_request();
 
         let resp: serde_json::Value = test::call_and_read_body_json(&mut app, req).await;
 

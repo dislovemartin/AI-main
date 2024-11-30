@@ -1,16 +1,16 @@
-use std::sync::Arc;
-use async_trait::async_trait;
 use anyhow::Result;
+use async_trait::async_trait;
+use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{info, error};
+use tracing::{error, info};
 use uuid::Uuid;
 
+use crate::errors::RecommendationError;
 use crate::models::{
-    User, Item, RecommendationRequest, RecommendationResponse, RecommendedItem,
-    WideAndDeepModel, WideAndDeepTrainer, ModelMetrics,
+    Item, ModelMetrics, RecommendationRequest, RecommendationResponse, RecommendedItem, User,
+    WideAndDeepModel, WideAndDeepTrainer,
 };
 use crate::repository::RecommendationRepository;
-use crate::errors::RecommendationError;
 
 #[async_trait]
 pub trait RecommendationService: Send + Sync {
@@ -18,9 +18,9 @@ pub trait RecommendationService: Send + Sync {
         &self,
         request: RecommendationRequest,
     ) -> Result<RecommendationResponse, RecommendationError>;
-    
+
     async fn train_model(&self) -> Result<ModelMetrics, RecommendationError>;
-    
+
     async fn update_user_preferences(
         &self,
         user_id: String,
@@ -42,11 +42,7 @@ impl WideAndDeepRecommender {
         let trainer = WideAndDeepTrainer::new(&config)
             .map_err(|e| RecommendationError::ModelInitializationError(e.to_string()))?;
 
-        Ok(Self {
-            model: Arc::new(RwLock::new(trainer)),
-            repository,
-            config,
-        })
+        Ok(Self { model: Arc::new(RwLock::new(trainer)), repository, config })
     }
 
     async fn get_user(&self, user_id: &str) -> Result<User, RecommendationError> {
@@ -56,18 +52,24 @@ impl WideAndDeepRecommender {
             .map_err(|e| RecommendationError::DatabaseError(e.to_string()))
     }
 
-    async fn get_candidate_items(&self, user: &User, limit: usize) -> Result<Vec<Item>, RecommendationError> {
+    async fn get_candidate_items(
+        &self,
+        user: &User,
+        limit: usize,
+    ) -> Result<Vec<Item>, RecommendationError> {
         self.repository
             .get_candidate_items(user, limit)
             .await
             .map_err(|e| RecommendationError::DatabaseError(e.to_string()))
     }
 
-    async fn score_items(&self, user: &User, items: &[Item]) -> Result<Vec<f32>, RecommendationError> {
+    async fn score_items(
+        &self,
+        user: &User,
+        items: &[Item],
+    ) -> Result<Vec<f32>, RecommendationError> {
         let model = self.model.read().await;
-        model
-            .predict(user, items)
-            .map_err(|e| RecommendationError::ModelError(e.to_string()))
+        model.predict(user, items).map_err(|e| RecommendationError::ModelError(e.to_string()))
     }
 
     async fn create_response(
@@ -121,7 +123,8 @@ impl RecommendationService for WideAndDeepRecommender {
         info!("Starting model training");
 
         // Get training data
-        let training_data = self.repository
+        let training_data = self
+            .repository
             .get_training_data()
             .await
             .map_err(|e| RecommendationError::DatabaseError(e.to_string()))?;
@@ -151,4 +154,4 @@ impl RecommendationService for WideAndDeepRecommender {
 
         Ok(())
     }
-} 
+}

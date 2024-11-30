@@ -1,5 +1,4 @@
-
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use log::{error, info, warn};
 
 /// Processes input data and transforms it into a suitable format for modeling.

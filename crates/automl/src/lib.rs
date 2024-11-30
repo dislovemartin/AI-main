@@ -1,11 +1,15 @@
 pub mod api;
+pub mod config;
 pub mod data_processing;
+pub mod errors;
+pub mod evaluation;
+pub mod feature_engineering;
+pub mod handlers;
+pub mod hyperparameter_tuning;
 pub mod metrics;
 pub mod model_search;
 pub mod models;
+pub mod optimization;
+pub mod services;
+pub mod telemetry;
 pub mod utils;
-// pub mod hyperparameter_tuning;
-// pub mod feature_engineering;
-pub mod evaluation;
-
-// TODO: Add other modules as needed

@@ -1,4 +1,3 @@
-
 //! Module: Utils
 //! Utility functions for the AI Chatbot.
 //!

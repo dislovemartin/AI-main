@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use common::{Run, RunStatus};
 
 pub struct DataProcessor {

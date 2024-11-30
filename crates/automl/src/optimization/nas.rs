@@ -1,12 +1,14 @@
-use std::sync::Arc;
-use petgraph::graph::{DiGraph, NodeIndex};
-use petgraph::Direction;
-use tch::{nn, Device, Tensor};
 use anyhow::Result;
-use tracing::{info, error};
+use petgraph::Direction;
+use petgraph::graph::{DiGraph, NodeIndex};
+use rand::Rng;
+use std::collections::{HashSet, VecDeque};
+use std::sync::Arc;
+use tch::{Device, Tensor, nn};
+use tracing::{error, info};
 
-use crate::models::{NNConfig, ModelMetrics};
 use crate::errors::AutoMLError;
+use crate::models::{ModelMetrics, NNConfig};
 
 #[derive(Debug, Clone)]
 pub enum LayerType {
@@ -30,11 +32,7 @@ impl NeuralArchitectureSearch {
         let device = Device::Cpu; // Use GPU if available
         let var_store = nn::VarStore::new(device);
 
-        Ok(Self {
-            config,
-            device,
-            var_store,
-        })
+        Ok(Self { config, device, var_store })
     }
 
     pub fn generate_architecture(&self) -> Result<DiGraph<LayerType, ()>, AutoMLError> {
@@ -49,7 +47,7 @@ impl NeuralArchitectureSearch {
         for layer_idx in 0..self.config.max_layers {
             // Randomly choose number of units
             let n_units = rand::random::<usize>() % self.config.max_units + 64;
-            
+
             // Add linear layer
             let linear_node = graph.add_node(LayerType::Linear {
                 in_features: current_size,
@@ -61,24 +59,20 @@ impl NeuralArchitectureSearch {
             }
 
             // Add batch normalization
-            let bn_node = graph.add_node(LayerType::BatchNorm1d {
-                num_features: n_units as i64,
-            });
+            let bn_node = graph.add_node(LayerType::BatchNorm1d { num_features: n_units as i64 });
             graph.add_edge(linear_node, bn_node, ());
 
             // Add activation
-            let activation_name = self.config.activation_functions[
-                rand::random::<usize>() % self.config.activation_functions.len()
-            ].clone();
-            let activation_node = graph.add_node(LayerType::Activation {
-                name: activation_name,
-            });
+            let activation_name = self.config.activation_functions
+                [rand::random::<usize>() % self.config.activation_functions.len()]
+            .clone();
+            let activation_node = graph.add_node(LayerType::Activation { name: activation_name });
             graph.add_edge(bn_node, activation_node, ());
 
             // Add dropout with random probability
-            let dropout_prob = rand::random::<f64>() * 
-                (self.config.dropout_range.1 - self.config.dropout_range.0) +
-                self.config.dropout_range.0;
+            let dropout_prob = rand::random::<f64>()
+                * (self.config.dropout_range.1 - self.config.dropout_range.0)
+                + self.config.dropout_range.0;
             let dropout_node = graph.add_node(LayerType::Dropout { p: dropout_prob });
             graph.add_edge(activation_node, dropout_node, ());
 
@@ -98,7 +92,10 @@ impl NeuralArchitectureSearch {
         Ok(graph)
     }
 
-    pub fn build_model(&self, architecture: &DiGraph<LayerType, ()>) -> Result<Box<dyn nn::Module>, AutoMLError> {
+    pub fn build_model(
+        &self,
+        architecture: &DiGraph<LayerType, ()>,
+    ) -> Result<Box<dyn nn::Module>, AutoMLError> {
         let mut layers = Vec::new();
         let mut visited = std::collections::HashSet::new();
         let mut queue = std::collections::VecDeque::new();
@@ -117,14 +114,13 @@ impl NeuralArchitectureSearch {
             }
 
             let layer = match &architecture[node] {
-                LayerType::Linear { in_features, out_features } => {
-                    Box::new(nn::linear(
-                        &self.var_store.root(),
-                        *in_features,
-                        *out_features,
-                        Default::default(),
-                    )) as Box<dyn nn::Module>
-                }
+                LayerType::Linear { in_features, out_features } => Box::new(nn::linear(
+                    &self.var_store.root(),
+                    *in_features,
+                    *out_features,
+                    Default::default(),
+                ))
+                    as Box<dyn nn::Module>,
                 LayerType::Conv2d { in_channels, out_channels, kernel_size } => {
                     Box::new(nn::conv2d(
                         &self.var_store.root(),
@@ -135,41 +131,33 @@ impl NeuralArchitectureSearch {
                     )) as Box<dyn nn::Module>
                 }
                 LayerType::MaxPool2d { kernel_size } => {
-                    Box::new(nn::max_pool2d(
-                        *kernel_size,
-                        *kernel_size,
-                        0,
-                        1,
-                        true,
-                    )) as Box<dyn nn::Module>
+                    Box::new(nn::max_pool2d(*kernel_size, *kernel_size, 0, 1, true))
+                        as Box<dyn nn::Module>
                 }
-                LayerType::Dropout { p } => {
-                    Box::new(nn::dropout(*p, false)) as Box<dyn nn::Module>
-                }
-                LayerType::BatchNorm1d { num_features } => {
-                    Box::new(nn::batch_norm1d(
-                        &self.var_store.root(),
-                        *num_features,
-                        Default::default(),
-                    )) as Box<dyn nn::Module>
-                }
-                LayerType::BatchNorm2d { num_features } => {
-                    Box::new(nn::batch_norm2d(
-                        &self.var_store.root(),
-                        *num_features,
-                        Default::default(),
-                    )) as Box<dyn nn::Module>
-                }
-                LayerType::Activation { name } => {
-                    match name.as_str() {
-                        "relu" => Box::new(nn::func(|xs| xs.relu())) as Box<dyn nn::Module>,
-                        "tanh" => Box::new(nn::func(|xs| xs.tanh())) as Box<dyn nn::Module>,
-                        "sigmoid" => Box::new(nn::func(|xs| xs.sigmoid())) as Box<dyn nn::Module>,
-                        _ => return Err(AutoMLError::ArchitectureError(
-                            format!("Unknown activation function: {}", name)
-                        )),
+                LayerType::Dropout { p } => Box::new(nn::dropout(*p, false)) as Box<dyn nn::Module>,
+                LayerType::BatchNorm1d { num_features } => Box::new(nn::batch_norm1d(
+                    &self.var_store.root(),
+                    *num_features,
+                    Default::default(),
+                ))
+                    as Box<dyn nn::Module>,
+                LayerType::BatchNorm2d { num_features } => Box::new(nn::batch_norm2d(
+                    &self.var_store.root(),
+                    *num_features,
+                    Default::default(),
+                ))
+                    as Box<dyn nn::Module>,
+                LayerType::Activation { name } => match name.as_str() {
+                    "relu" => Box::new(nn::func(|xs| xs.relu())) as Box<dyn nn::Module>,
+                    "tanh" => Box::new(nn::func(|xs| xs.tanh())) as Box<dyn nn::Module>,
+                    "sigmoid" => Box::new(nn::func(|xs| xs.sigmoid())) as Box<dyn nn::Module>,
+                    _ => {
+                        return Err(AutoMLError::ArchitectureError(format!(
+                            "Unknown activation function: {}",
+                            name
+                        )));
                     }
-                }
+                },
             };
 
             layers.push(layer);
@@ -216,9 +204,9 @@ impl NeuralArchitectureSearch {
             auc_roc: None,   // Calculate if needed
             mse: Some(avg_loss),
             rmse: Some(avg_loss.sqrt()),
-            mae: None,       // Calculate if needed
-            r2_score: None,  // Calculate if needed
+            mae: None,      // Calculate if needed
+            r2_score: None, // Calculate if needed
             custom_metrics: Default::default(),
         })
     }
-} 
+}

@@ -1,4 +1,3 @@
-
 //! Module: Common
 //! Provides shared utilities, metrics, and configurations for the workspace.
 

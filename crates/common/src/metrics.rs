@@ -1,8 +1,10 @@
-
 //! Module: Metrics
 //! Provides Prometheus-based metrics for monitoring application performance.
 
-use prometheus::{register_histogram_vec, register_int_counter_vec, Encoder, HistogramVec, IntCounterVec, TextEncoder};
+use prometheus::{
+    Encoder, HistogramVec, IntCounterVec, TextEncoder, register_histogram_vec,
+    register_int_counter_vec,
+};
 
 /// MetricsCollector handles Prometheus metrics collection.
 pub struct MetricsCollector {
@@ -17,13 +19,15 @@ impl MetricsCollector {
             format!("{}_requests_total", service_name),
             format!("Total requests for {}", service_name),
             &["endpoint", "status"]
-        ).expect("Failed to create IntCounterVec");
+        )
+        .expect("Failed to create IntCounterVec");
 
         let histogram = register_histogram_vec!(
             format!("{}_response_duration_seconds", service_name),
             format!("Response duration for {}", service_name),
             &["endpoint"]
-        ).expect("Failed to create HistogramVec");
+        )
+        .expect("Failed to create HistogramVec");
 
         Self { counter, histogram }
     }

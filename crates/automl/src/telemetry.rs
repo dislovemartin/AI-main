@@ -1,13 +1,13 @@
+use crate::{config::Config, errors::AutoMLError};
 use actix_web::middleware::Logger;
 use opentelemetry::{global, sdk::propagation::TraceContextPropagator};
 use opentelemetry_jaeger::new_agent_pipeline;
-use tracing::{Subscriber, Level};
-use tracing_subscriber::{layer::SubscriberExt, Registry};
-use tracing_subscriber::fmt::layer;
-use tracing_subscriber::EnvFilter;
-use tracing_opentelemetry::OpenTelemetryLayer;
 use std::future::Future;
-use crate::{config::Config, errors::AutoMLError};
+use tracing::{Level, Subscriber};
+use tracing_opentelemetry::OpenTelemetryLayer;
+use tracing_subscriber::EnvFilter;
+use tracing_subscriber::fmt::layer;
+use tracing_subscriber::{Registry, layer::SubscriberExt};
 
 pub fn init_telemetry(config: &Config) -> Result<(), AutoMLError> {
     // Set global propagator
@@ -20,7 +20,9 @@ pub fn init_telemetry(config: &Config) -> Result<(), AutoMLError> {
                 .with_endpoint(jaeger_endpoint)
                 .with_service_name("automl")
                 .install_batch(opentelemetry::runtime::Tokio)
-                .map_err(|e| AutoMLError::ConfigError(format!("Failed to initialize Jaeger: {}", e)))?,
+                .map_err(|e| {
+                    AutoMLError::ConfigError(format!("Failed to initialize Jaeger: {}", e))
+                })?,
         )
     } else {
         None
@@ -41,9 +43,7 @@ pub fn init_telemetry(config: &Config) -> Result<(), AutoMLError> {
         .map_err(|e| AutoMLError::ConfigError(format!("Failed to initialize log filter: {}", e)))?;
 
     // Build subscriber with all layers
-    let subscriber = Registry::default()
-        .with(filter_layer)
-        .with(fmt_layer);
+    let subscriber = Registry::default().with(filter_layer).with(fmt_layer);
 
     // Add OpenTelemetry layer if tracer is configured
     let subscriber = if let Some(tracer) = tracer {
@@ -53,8 +53,9 @@ pub fn init_telemetry(config: &Config) -> Result<(), AutoMLError> {
     };
 
     // Set global default subscriber
-    tracing::subscriber::set_global_default(subscriber)
-        .map_err(|e| AutoMLError::ConfigError(format!("Failed to set tracing subscriber: {}", e)))?;
+    tracing::subscriber::set_global_default(subscriber).map_err(|e| {
+        AutoMLError::ConfigError(format!("Failed to set tracing subscriber: {}", e))
+    })?;
 
     Ok(())
 }
@@ -70,10 +71,10 @@ pub struct TracingMiddleware;
 impl<S, B> actix_web::dev::Transform<S, actix_web::dev::ServiceRequest> for TracingMiddleware
 where
     S: actix_web::dev::Service<
-        actix_web::dev::ServiceRequest,
-        Response = actix_web::dev::ServiceResponse<B>,
-        Error = actix_web::Error,
-    >,
+            actix_web::dev::ServiceRequest,
+            Response = actix_web::dev::ServiceResponse<B>,
+            Error = actix_web::Error,
+        >,
     S::Future: 'static,
     B: 'static,
 {
@@ -95,10 +96,10 @@ pub struct TracingMiddlewareService<S> {
 impl<S, B> actix_web::dev::Service<actix_web::dev::ServiceRequest> for TracingMiddlewareService<S>
 where
     S: actix_web::dev::Service<
-        actix_web::dev::ServiceRequest,
-        Response = actix_web::dev::ServiceResponse<B>,
-        Error = actix_web::Error,
-    >,
+            actix_web::dev::ServiceRequest,
+            Response = actix_web::dev::ServiceResponse<B>,
+            Error = actix_web::Error,
+        >,
     S::Future: 'static,
     B: 'static,
 {
@@ -151,4 +152,4 @@ mod tests {
         let middleware = TracingMiddleware::default();
         assert!(middleware.clone().debug_str().contains("TracingMiddleware"));
     }
-} 
+}

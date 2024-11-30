@@ -4,7 +4,7 @@ pub mod metrics;
 pub mod models;
 pub mod utils;
 
-use actix_web::{web, App, HttpServer};
+use actix_web::{App, HttpServer, web};
 use common::config::Config;
 
 pub async fn run_server(config: Config) -> std::io::Result<()> {

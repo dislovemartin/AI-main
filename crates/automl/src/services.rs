@@ -1,36 +1,23 @@
-use std::sync::Arc;
 use async_trait::async_trait;
+use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{info, error};
+use tracing::{error, info};
 use uuid::Uuid;
 
-use crate::models::{
-    AutoMLConfig, TaskType, ModelConfig, ModelType,
-    StudyResult, TrialResult, ModelMetrics,
-};
-use crate::optimization::{
-    optuna::OptunaOptimizer,
-    nas::NeuralArchitectureSearch,
-};
-use crate::repository::AutoMLRepository;
 use crate::errors::AutoMLError;
+use crate::models::{
+    AutoMLConfig, ModelConfig, ModelMetrics, ModelType, StudyResult, TaskType, TrialResult,
+};
+use crate::optimization::{nas::NeuralArchitectureSearch, optuna::OptunaOptimizer};
+use crate::repository::AutoMLRepository;
 
 #[async_trait]
 pub trait AutoMLService: Send + Sync {
-    async fn optimize_model(
-        &self,
-        config: AutoMLConfig,
-    ) -> Result<StudyResult, AutoMLError>;
-    
-    async fn get_study_info(
-        &self,
-        study_id: String,
-    ) -> Result<StudyResult, AutoMLError>;
-    
-    async fn get_best_model(
-        &self,
-        study_id: String,
-    ) -> Result<ModelConfig, AutoMLError>;
+    async fn optimize_model(&self, config: AutoMLConfig) -> Result<StudyResult, AutoMLError>;
+
+    async fn get_study_info(&self, study_id: String) -> Result<StudyResult, AutoMLError>;
+
+    async fn get_best_model(&self, study_id: String) -> Result<ModelConfig, AutoMLError>;
 }
 
 pub struct AutoMLOptimizer {
@@ -41,11 +28,7 @@ pub struct AutoMLOptimizer {
 
 impl AutoMLOptimizer {
     pub async fn new(repository: Arc<dyn AutoMLRepository>) -> Result<Self, AutoMLError> {
-        Ok(Self {
-            repository,
-            current_study: None,
-            nas: None,
-        })
+        Ok(Self { repository, current_study: None, nas: None })
     }
 
     async fn initialize_study(&mut self, config: &AutoMLConfig) -> Result<(), AutoMLError> {
@@ -60,7 +43,7 @@ impl AutoMLOptimizer {
                 }
                 _ => {
                     return Err(AutoMLError::ConfigError(
-                        "Architecture search is only supported for neural networks".to_string()
+                        "Architecture search is only supported for neural networks".to_string(),
                     ));
                 }
             }
@@ -120,21 +103,21 @@ impl AutoMLOptimizer {
 
 #[async_trait]
 impl AutoMLService for AutoMLOptimizer {
-    async fn optimize_model(
-        &self,
-        config: AutoMLConfig,
-    ) -> Result<StudyResult, AutoMLError> {
+    async fn optimize_model(&self, config: AutoMLConfig) -> Result<StudyResult, AutoMLError> {
         info!("Starting model optimization with config: {:?}", config);
 
         // Initialize study and NAS if needed
         let mut this = self.clone();
         this.initialize_study(&config).await?;
 
-        let study = this.current_study.as_ref()
+        let study = this
+            .current_study
+            .as_ref()
             .ok_or_else(|| AutoMLError::ConfigError("Study not initialized".to_string()))?;
 
         // Get training data
-        let training_data = this.repository
+        let training_data = this
+            .repository
             .get_training_data()
             .await
             .map_err(|e| AutoMLError::DatabaseError(e.to_string()))?;
@@ -166,9 +149,7 @@ impl AutoMLService for AutoMLOptimizer {
                 TaskType::BinaryClassification | TaskType::MultiClassification => {
                     Ok(1.0 - metrics.accuracy.unwrap_or(0.0))
                 }
-                TaskType::Regression => {
-                    Ok(metrics.mse.unwrap_or(f64::INFINITY))
-                }
+                TaskType::Regression => Ok(metrics.mse.unwrap_or(f64::INFINITY)),
                 _ => Err(AutoMLError::ConfigError("Unsupported task type".to_string())),
             }
         };
@@ -182,26 +163,21 @@ impl AutoMLService for AutoMLOptimizer {
         Ok(result)
     }
 
-    async fn get_study_info(
-        &self,
-        study_id: String,
-    ) -> Result<StudyResult, AutoMLError> {
+    async fn get_study_info(&self, study_id: String) -> Result<StudyResult, AutoMLError> {
         info!("Retrieving study info for: {}", study_id);
         self.load_study_result(&study_id).await
     }
 
-    async fn get_best_model(
-        &self,
-        study_id: String,
-    ) -> Result<ModelConfig, AutoMLError> {
+    async fn get_best_model(&self, study_id: String) -> Result<ModelConfig, AutoMLError> {
         info!("Retrieving best model for study: {}", study_id);
-        
+
         let study_result = self.load_study_result(&study_id).await?;
-        let model_config = self.repository
+        let model_config = self
+            .repository
             .load_model_config(&study_result.best_model_path)
             .await
             .map_err(|e| AutoMLError::DatabaseError(e.to_string()))?;
 
         Ok(model_config)
     }
-} 
+}

@@ -2,12 +2,12 @@ use anyhow::Result;
 use async_trait::async_trait;
 use rust_bert::pipelines::text_generation::{TextGenerationConfig, TextGenerationModel};
 use serde::{Deserialize, Serialize};
-use tokio::sync::RwLock;
 use std::sync::Arc;
-use tracing::{info, error, warn, debug};
+use tokio::sync::RwLock;
+use tracing::{debug, error, info, warn};
 
 use crate::errors::ChatbotError;
-use crate::models::{ChatMessage, ChatResponse, ResponseMetadata, ChatConfig};
+use crate::models::{ChatConfig, ChatMessage, ChatResponse, ResponseMetadata};
 
 /// Configuration for the HuggingFace chatbot model
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -59,7 +59,7 @@ impl HuggingFaceChatbot {
     pub async fn new(config: Option<HuggingFaceConfig>) -> Result<Self, ChatbotError> {
         let config = config.unwrap_or_default();
         info!("Initializing HuggingFace chatbot with model: {}", config.model_name);
-        
+
         let generation_config = TextGenerationConfig {
             max_length: config.max_length,
             num_beams: config.num_beams,
@@ -71,16 +71,12 @@ impl HuggingFaceChatbot {
             ..Default::default()
         };
 
-        let model = TextGenerationModel::new(Default::default())
-            .map_err(|e| {
-                error!("Failed to initialize model: {:?}", e);
-                ChatbotError::ModelInitializationError(e.to_string())
-            })?;
-        
-        Ok(Self {
-            model: Arc::new(RwLock::new(model)),
-            config: Arc::new(RwLock::new(config)),
-        })
+        let model = TextGenerationModel::new(Default::default()).map_err(|e| {
+            error!("Failed to initialize model: {:?}", e);
+            ChatbotError::ModelInitializationError(e.to_string())
+        })?;
+
+        Ok(Self { model: Arc::new(RwLock::new(model)), config: Arc::new(RwLock::new(config)) })
     }
 
     /// Preprocess the input message before generation
@@ -94,11 +90,7 @@ impl HuggingFaceChatbot {
     async fn format_response(&self, output: String, processing_time: u64) -> ChatResponse {
         let config = self.config.read().await;
         ChatResponse {
-            message: ChatMessage {
-                role: "assistant".to_string(),
-                content: output,
-                metadata: None,
-            },
+            message: ChatMessage { role: "assistant".to_string(), content: output, metadata: None },
             metadata: ResponseMetadata {
                 timestamp: chrono::Utc::now(),
                 model_version: config.model_name.clone(),
@@ -114,11 +106,11 @@ impl ChatbotService for HuggingFaceChatbot {
     async fn generate_response(&self, message: &ChatMessage) -> Result<ChatResponse, ChatbotError> {
         let start_time = std::time::Instant::now();
         let input_text = self.preprocess_message(message).await;
-        
+
         debug!("Generating response for input: {}", input_text);
         let model = self.model.read().await;
         let config = self.config.read().await;
-        
+
         let generation_config = TextGenerationConfig {
             max_length: config.max_length,
             num_beams: config.num_beams,
@@ -130,12 +122,10 @@ impl ChatbotService for HuggingFaceChatbot {
             ..Default::default()
         };
 
-        let output = model
-            .generate(&[input_text], Some(&generation_config))
-            .map_err(|e| {
-                error!("Model generation error: {:?}", e);
-                ChatbotError::ModelError(e.to_string())
-            })?;
+        let output = model.generate(&[input_text], Some(&generation_config)).map_err(|e| {
+            error!("Model generation error: {:?}", e);
+            ChatbotError::ModelError(e.to_string())
+        })?;
 
         if let Some(response) = output.first() {
             let processing_time = start_time.elapsed().as_millis() as u64;
@@ -180,7 +170,7 @@ mod tests {
             content: "Hello, how are you?".to_string(),
             metadata: None,
         };
-        
+
         let response = chatbot.generate_response(&message).await;
         assert!(response.is_ok());
     }
@@ -194,8 +184,8 @@ mod tests {
             temperature: 0.8,
             stream: false,
         };
-        
+
         let result = chatbot.update_config(new_config).await;
         assert!(result.is_ok());
     }
-} 
+}

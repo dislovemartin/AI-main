@@ -1,5 +1,5 @@
-use actix_web::{web, App, HttpServer};
-use tracing::{info, Level};
+use actix_web::{App, HttpServer, web};
+use tracing::{Level, info};
 use tracing_subscriber::FmtSubscriber;
 
 mod api;
@@ -28,9 +28,8 @@ async fn main() -> std::io::Result<()> {
     info!("Starting AI Chatbot service...");
 
     // Initialize application state
-    let app_state = handlers::AppState::new()
-        .await
-        .expect("Failed to initialize application state");
+    let app_state =
+        handlers::AppState::new().await.expect("Failed to initialize application state");
     let app_data = web::Data::new(app_state);
 
     // Start HTTP server

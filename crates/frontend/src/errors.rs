@@ -27,9 +27,7 @@ impl ResponseError for AppError {
             AppError::InvalidInput(_) => actix_web::http::StatusCode::BAD_REQUEST,
         };
 
-        HttpResponse::build(status_code).json(ErrorResponse {
-            error: self.to_string(),
-            timestamp: Utc::now(),
-        })
+        HttpResponse::build(status_code)
+            .json(ErrorResponse { error: self.to_string(), timestamp: Utc::now() })
     }
 }

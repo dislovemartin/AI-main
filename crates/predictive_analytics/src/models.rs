@@ -1,8 +1,8 @@
 use anyhow::Result;
-use common::{Run, RunError, RunStatus};
-use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
+use common::{Run, RunError, RunStatus};
 use ndarray::Array2;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 pub struct PredictiveModel {
@@ -12,10 +12,7 @@ pub struct PredictiveModel {
 
 impl PredictiveModel {
     pub fn new(user: String, params: ModelParams) -> Self {
-        Self {
-            run: Run::new(user),
-            model_parameters: params,
-        }
+        Self { run: Run::new(user), model_parameters: params }
     }
 
     pub async fn train_model(&mut self, training_data: TrainingData) -> Result<()> {
@@ -212,18 +209,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_model_training_success() {
-        let mut model = PredictiveModel::new(
-            "test_user".to_string(),
-            ModelParams {
-                learning_rate: 0.01,
-                epochs: 10,
-            },
-        );
+        let mut model = PredictiveModel::new("test_user".to_string(), ModelParams {
+            learning_rate: 0.01,
+            epochs: 10,
+        });
 
-        let training_data = TrainingData {
-            features: vec![vec![1.0, 2.0], vec![3.0, 4.0]],
-            labels: vec![5.0, 6.0],
-        };
+        let training_data =
+            TrainingData { features: vec![vec![1.0, 2.0], vec![3.0, 4.0]], labels: vec![5.0, 6.0] };
 
         let result = model.train_model(training_data).await;
         assert!(result.is_ok());
@@ -240,10 +232,8 @@ mod tests {
             user: "test_user".to_string(),
         };
 
-        let training_data = TrainingData {
-            features: vec![vec![1.0, 2.0], vec![3.0, 4.0]],
-            labels: vec![5.0, 6.0],
-        };
+        let training_data =
+            TrainingData { features: vec![vec![1.0, 2.0], vec![3.0, 4.0]], labels: vec![5.0, 6.0] };
 
         let result = model.train_model(training_data).await;
         assert!(result.is_err());
@@ -258,14 +248,9 @@ mod tests {
             expiration_time: Duration::from_secs(3600),                // 1 hour
             user: "test_user".to_string(),
         };
-        let model = PredictiveModel {
-            run,
-            model_parameters: ModelParams::default(),
-        };
+        let model = PredictiveModel { run, model_parameters: ModelParams::default() };
 
-        let prediction_input = PredictionInput {
-            data: vec![7.0, 8.0],
-        };
+        let prediction_input = PredictionInput { data: vec![7.0, 8.0] };
 
         let prediction = model.predict(prediction_input).await;
         assert!(prediction.is_err());

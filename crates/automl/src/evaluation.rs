@@ -20,11 +20,7 @@ pub mod evaluation {
         let true_positive =
             predictions.iter().zip(targets.iter()).filter(|(p, t)| *p == 1 && *t == 1).count();
         let predicted_positive = predictions.iter().filter(|&&p| p == 1).count();
-        if predicted_positive == 0 {
-            0.0
-        } else {
-            true_positive as f64 / predicted_positive as f64
-        }
+        if predicted_positive == 0 { 0.0 } else { true_positive as f64 / predicted_positive as f64 }
     }
 
     /// Calculates the recall of predictions.
@@ -32,22 +28,14 @@ pub mod evaluation {
         let true_positive =
             predictions.iter().zip(targets.iter()).filter(|(p, t)| *p == 1 && *t == 1).count();
         let actual_positive = targets.iter().filter(|&&t| t == 1).count();
-        if actual_positive == 0 {
-            0.0
-        } else {
-            true_positive as f64 / actual_positive as f64
-        }
+        if actual_positive == 0 { 0.0 } else { true_positive as f64 / actual_positive as f64 }
     }
 
     /// Calculates the F1 score of predictions.
     pub fn f1_score(predictions: &[i32], targets: &[i32]) -> f64 {
         let prec = precision(predictions, targets);
         let rec = recall(predictions, targets);
-        if prec + rec == 0.0 {
-            0.0
-        } else {
-            2.0 * prec * rec / (prec + rec)
-        }
+        if prec + rec == 0.0 { 0.0 } else { 2.0 * prec * rec / (prec + rec) }
     }
 
     // Add more evaluation metrics as needed.

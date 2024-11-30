@@ -1,7 +1,7 @@
-use actix_web::{web, HttpResponse, Responder};
+use actix_web::{HttpResponse, Responder, web};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tracing::{info, error};
+use tracing::{error, info};
 use uuid::Uuid;
 
 use crate::errors::{RecommendationError, error_to_response};
@@ -84,9 +84,7 @@ pub async fn update_preferences(
     })))
 }
 
-pub async fn train_model(
-    data: web::Data<AppState>,
-) -> Result<HttpResponse, RecommendationError> {
+pub async fn train_model(data: web::Data<AppState>) -> Result<HttpResponse, RecommendationError> {
     info!("Starting model training");
 
     match data.recommender.train_model().await {
@@ -105,8 +103,8 @@ pub async fn train_model(
 mod tests {
     use super::*;
     use actix_web::test;
-    use mockall::predicate::*;
     use mockall::mock;
+    use mockall::predicate::*;
 
     mock! {
         RecommendationService {}
@@ -131,19 +129,15 @@ mod tests {
     #[actix_rt::test]
     async fn test_get_recommendations() {
         let mut mock_service = MockRecommendationService::new();
-        mock_service
-            .expect_get_recommendations()
-            .returning(|_| {
-                Ok(RecommendationResponse {
-                    items: vec![],
-                    request_id: Uuid::new_v4().to_string(),
-                    model_version: "test".to_string(),
-                })
-            });
-
-        let app_state = web::Data::new(AppState {
-            recommender: Arc::new(mock_service),
+        mock_service.expect_get_recommendations().returning(|_| {
+            Ok(RecommendationResponse {
+                items: vec![],
+                request_id: Uuid::new_v4().to_string(),
+                model_version: "test".to_string(),
+            })
         });
+
+        let app_state = web::Data::new(AppState { recommender: Arc::new(mock_service) });
 
         let request = GetRecommendationsRequest {
             user_id: "test_user".to_string(),
@@ -151,10 +145,7 @@ mod tests {
             context: None,
         };
 
-        let resp = get_recommendations(
-            app_state,
-            web::Json(request),
-        ).await;
+        let resp = get_recommendations(app_state, web::Json(request)).await;
 
         assert!(resp.is_ok());
     }
@@ -162,13 +153,9 @@ mod tests {
     #[actix_rt::test]
     async fn test_update_preferences() {
         let mut mock_service = MockRecommendationService::new();
-        mock_service
-            .expect_update_user_preferences()
-            .returning(|_, _| Ok(()));
+        mock_service.expect_update_user_preferences().returning(|_, _| Ok(()));
 
-        let app_state = web::Data::new(AppState {
-            recommender: Arc::new(mock_service),
-        });
+        let app_state = web::Data::new(AppState { recommender: Arc::new(mock_service) });
 
         let request = UpdatePreferencesRequest {
             interactions: vec!["item1".to_string(), "item2".to_string()],
@@ -178,8 +165,9 @@ mod tests {
             app_state,
             web::Path::from("test_user".to_string()),
             web::Json(request),
-        ).await;
+        )
+        .await;
 
         assert!(resp.is_ok());
     }
-} 
+}

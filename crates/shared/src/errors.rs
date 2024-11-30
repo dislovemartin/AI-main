@@ -1,4 +1,3 @@
-
 //! Module: Errors
 //! Provides custom error types and utilities for the workspace.
 

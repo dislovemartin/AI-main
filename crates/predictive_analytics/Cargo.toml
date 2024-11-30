@@ -23,7 +23,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Database and caching
-sqlx = { version = "0.7", features = [
+sqlx = { version = "0.8", features = [
     "runtime-tokio-rustls",
     "postgres",
     "json",
@@ -32,7 +32,7 @@ sqlx = { version = "0.7", features = [
 redis = { version = "0.23", features = ["tokio-comp"] }
 
 # Machine Learning and Deep Learning
-tch = "0.13"          # PyTorch bindings
+tch = "0.10.1"        # PyTorch bindings
 ndarray = "0.15"      # N-dimensional arrays
 ndarray-stats = "0.5" # Statistical functions for ndarray
 linregress = "0.5"    # Linear regression
@@ -40,12 +40,13 @@ statrs = "0.16"       # Statistical computations
 
 # Time series specific
 chrono = { version = "0.4", features = ["serde"] }
-time-series-analysis = "0.1"
-seasonal = "0.1"                                   # Seasonal decomposition
-prophet = "0.3"                                    # Facebook Prophet bindings
+time = { version = "0.3", features = ["serde"] }
+smartcore = { version = "0.3", features = [
+    "serde",
+] } # Includes time series algorithms
 
 # Feature engineering
-polars = { version = "0.32", features = ["lazy", "temporal"] }
+polars = { version = "0.32", features = ["lazy", "temporal", "dtype-datetime"] }
 arrow = "42.0"
 
 # Metrics and monitoring

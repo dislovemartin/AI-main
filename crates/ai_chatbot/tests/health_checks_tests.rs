@@ -1,6 +1,6 @@
-use actix_web::{test, web, App};
+use actix_web::{App, test, web};
 use ai_chatbot::handlers::health_checks::{
-    liveness_check, readiness_check, set_readiness, ReadinessState,
+    ReadinessState, liveness_check, readiness_check, set_readiness,
 };
 use std::sync::atomic::AtomicBool;
 

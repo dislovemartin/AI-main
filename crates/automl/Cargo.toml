@@ -24,8 +24,8 @@ anyhow = "1.0"
 # Logging and tracing
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
-opentelemetry = { version = "0.20", features = ["rt-tokio"] }
-opentelemetry-jaeger = "0.19"
+opentelemetry = { version = "0.21", features = ["rt-tokio"] }
+opentelemetry-jaeger = "0.20"
 
 # Database and caching
 sqlx = { version = "0.7", features = [
@@ -38,24 +38,23 @@ sqlx = { version = "0.7", features = [
 redis = { version = "0.24", features = ["tokio-comp", "connection-manager"] }
 
 # Machine Learning and AutoML
-tch = "0.13"      # PyTorch bindings
-optuna = "0.2"    # Hyperparameter optimization
-hyperopt = "0.3"  # Alternative hyperparameter optimization
-rand = "0.8"      # Random number generation
-ndarray = "0.15"  # N-dimensional arrays
-smartcore = "0.3" # Machine learning algorithms
+tch = "0.10.1"      # PyTorch bindings
+hyperopt = "0.0.17" # Hyperparameter optimization
+rand = "0.8"        # Random number generation
+ndarray = "0.15"    # N-dimensional arrays
+smartcore = "0.3"   # Machine learning algorithms
 
 # Neural Architecture Search
 petgraph = "0.6" # Graph data structures for NAS
 
 # Metrics and monitoring
 prometheus = { version = "0.13", features = ["process"] }
-metrics = { version = "0.21", features = ["std"] }
+metrics = "0.21"
 metrics-exporter-prometheus = "0.12"
 
 # Feature engineering
-polars = { version = "0.35", features = ["lazy", "random", "ndarray", "json"] }
-arrow = "49.0"
+polars = { version = "0.36", features = ["lazy", "random", "ndarray", "json"] }
+arrow = "50.0"
 
 # Common utilities
 common = { path = "../common" }
@@ -70,13 +69,13 @@ ring = "0.17"  # Cryptography
 argon2 = "0.5" # Password hashing
 
 # Configuration
-config = "0.13" # Configuration management
-dotenv = "0.15" # Environment variable management
+config = "0.13"  # Configuration management
+dotenvy = "0.15" # Environment variable management
 
 [dev-dependencies]
 tokio-test = "0.4"
 mockall = "0.12"
-criterion = { version = "0.5", features = ["async_tokio"] }
+criterion = { version = "0.5.1", features = ["async_tokio"] }
 proptest = "1.3"
 approx = "0.5"
 test-log = "0.2"

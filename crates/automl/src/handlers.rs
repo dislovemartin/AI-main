@@ -1,7 +1,7 @@
-use actix_web::{web, HttpResponse, Responder};
+use actix_web::{HttpResponse, Responder, web};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tracing::{info, error};
+use tracing::{error, info};
 
 use crate::errors::{AutoMLError, error_to_response};
 use crate::models::{AutoMLConfig, ModelConfig};
@@ -87,8 +87,8 @@ pub async fn get_best_model(
 mod tests {
     use super::*;
     use actix_web::test;
-    use mockall::predicate::*;
     use mockall::mock;
+    use mockall::predicate::*;
 
     mock! {
         AutoMLService {}
@@ -115,25 +115,21 @@ mod tests {
     #[actix_rt::test]
     async fn test_optimize_model() {
         let mut mock_service = MockAutoMLService::new();
-        mock_service
-            .expect_optimize_model()
-            .returning(|_| {
-                Ok(crate::models::StudyResult {
-                    study_id: "test".to_string(),
-                    task_type: crate::models::TaskType::BinaryClassification,
-                    best_trial: Default::default(),
-                    best_model_path: "models/test.pt".to_string(),
-                    trials: vec![],
-                    optimization_history: vec![],
-                    datetime_start: chrono::Utc::now(),
-                    datetime_complete: Some(chrono::Utc::now()),
-                    metadata: Default::default(),
-                })
-            });
-
-        let app_state = web::Data::new(AppState {
-            optimizer: Arc::new(mock_service),
+        mock_service.expect_optimize_model().returning(|_| {
+            Ok(crate::models::StudyResult {
+                study_id: "test".to_string(),
+                task_type: crate::models::TaskType::BinaryClassification,
+                best_trial: Default::default(),
+                best_model_path: "models/test.pt".to_string(),
+                trials: vec![],
+                optimization_history: vec![],
+                datetime_start: chrono::Utc::now(),
+                datetime_complete: Some(chrono::Utc::now()),
+                metadata: Default::default(),
+            })
         });
+
+        let app_state = web::Data::new(AppState { optimizer: Arc::new(mock_service) });
 
         let request = OptimizeModelRequest {
             config: AutoMLConfig {
@@ -145,10 +141,7 @@ mod tests {
             },
         };
 
-        let resp = optimize_model(
-            app_state,
-            web::Json(request),
-        ).await;
+        let resp = optimize_model(app_state, web::Json(request)).await;
 
         assert!(resp.is_ok());
     }
@@ -156,31 +149,24 @@ mod tests {
     #[actix_rt::test]
     async fn test_get_study_info() {
         let mut mock_service = MockAutoMLService::new();
-        mock_service
-            .expect_get_study_info()
-            .returning(|_| {
-                Ok(crate::models::StudyResult {
-                    study_id: "test".to_string(),
-                    task_type: crate::models::TaskType::BinaryClassification,
-                    best_trial: Default::default(),
-                    best_model_path: "models/test.pt".to_string(),
-                    trials: vec![],
-                    optimization_history: vec![],
-                    datetime_start: chrono::Utc::now(),
-                    datetime_complete: Some(chrono::Utc::now()),
-                    metadata: Default::default(),
-                })
-            });
-
-        let app_state = web::Data::new(AppState {
-            optimizer: Arc::new(mock_service),
+        mock_service.expect_get_study_info().returning(|_| {
+            Ok(crate::models::StudyResult {
+                study_id: "test".to_string(),
+                task_type: crate::models::TaskType::BinaryClassification,
+                best_trial: Default::default(),
+                best_model_path: "models/test.pt".to_string(),
+                trials: vec![],
+                optimization_history: vec![],
+                datetime_start: chrono::Utc::now(),
+                datetime_complete: Some(chrono::Utc::now()),
+                metadata: Default::default(),
+            })
         });
 
-        let resp = get_study_info(
-            app_state,
-            web::Path::from("test_study".to_string()),
-        ).await;
+        let app_state = web::Data::new(AppState { optimizer: Arc::new(mock_service) });
+
+        let resp = get_study_info(app_state, web::Path::from("test_study".to_string())).await;
 
         assert!(resp.is_ok());
     }
-} 
+}

@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use common::errors::AppError;
 use common::predictor::Predictor;
 use common::{Run, RunStatus};

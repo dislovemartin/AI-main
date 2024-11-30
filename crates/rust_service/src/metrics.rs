@@ -1,5 +1,5 @@
 use lazy_static::lazy_static;
-use prometheus::{register_int_counter_vec, Encoder, IntCounterVec, TextEncoder};
+use prometheus::{Encoder, IntCounterVec, TextEncoder, register_int_counter_vec};
 
 lazy_static! {
     pub static ref REQUEST_COUNTER: IntCounterVec = register_int_counter_vec!(

@@ -1,8 +1,7 @@
-
 use anyhow::Result;
 use lazy_static::lazy_static;
 use prometheus::{
-    register_counter_vec, register_histogram_vec, CounterVec, Encoder, HistogramVec, TextEncoder,
+    CounterVec, Encoder, HistogramVec, TextEncoder, register_counter_vec, register_histogram_vec,
 };
 
 /// Define and register a counter metric.
@@ -13,7 +12,6 @@ lazy_static! {
         &["service", "status"]
     )
     .expect("Failed to create REQUEST_COUNTER");
-
     pub static ref RESPONSE_TIME_HISTOGRAM: HistogramVec = register_histogram_vec!(
         "automl_response_time_seconds",
         "Histogram for response times of the AutoML service",

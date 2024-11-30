@@ -1,6 +1,8 @@
-
 use lazy_static::lazy_static;
-use prometheus::{register_histogram_vec, register_int_counter_vec, Encoder, HistogramVec, IntCounterVec, TextEncoder};
+use prometheus::{
+    Encoder, HistogramVec, IntCounterVec, TextEncoder, register_histogram_vec,
+    register_int_counter_vec,
+};
 
 lazy_static! {
     pub static ref REQUEST_COUNTER: IntCounterVec = register_int_counter_vec!(
@@ -9,7 +11,6 @@ lazy_static! {
         &["service", "status"]
     )
     .expect("Failed to create REQUEST_COUNTER");
-
     pub static ref RESPONSE_TIME_HISTOGRAM: HistogramVec = register_histogram_vec!(
         "ai_consulting_response_time_seconds",
         "Histogram for response times of the AI consulting service",

@@ -1,13 +1,13 @@
 //! Module: Handlers
 //! Handles API requests for the AI Chatbot.
-//! 
+//!
 //! This module defines functions like `chat_endpoint` and `health_check`.
 //! These functions process incoming requests and delegate tasks to other modules.
 
-use actix_web::{web, HttpResponse, Responder};
+use actix_web::{HttpResponse, Responder, web};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tracing::{info, error};
+use tracing::{error, info};
 
 use crate::errors::{ChatbotError, error_to_response};
 use crate::models::Message;
@@ -46,9 +46,7 @@ pub struct AppState {
 impl AppState {
     pub async fn new() -> Result<Self, ChatbotError> {
         let chatbot = HuggingFaceChatbot::new("gpt2").await?;
-        Ok(Self {
-            chatbot: Arc::new(chatbot),
-        })
+        Ok(Self { chatbot: Arc::new(chatbot) })
     }
 }
 
@@ -97,10 +95,12 @@ mod tests {
         let resp = health_check().await;
         let resp = test::call_service(
             &test::init_service(
-                actix_web::App::new().service(web::resource("/health").to(health_check))
-            ).await,
+                actix_web::App::new().service(web::resource("/health").to(health_check)),
+            )
+            .await,
             test::TestRequest::get().uri("/health").to_request(),
-        ).await;
+        )
+        .await;
         assert!(resp.status().is_success());
     }
 
@@ -109,15 +109,10 @@ mod tests {
         let app_state = AppState::new().await.unwrap();
         let app_data = web::Data::new(app_state);
 
-        let request = ChatRequest {
-            message: "Hello".to_string(),
-            user_id: "test_user".to_string(),
-        };
+        let request =
+            ChatRequest { message: "Hello".to_string(), user_id: "test_user".to_string() };
 
-        let resp = chat(
-            app_data,
-            web::Json(request),
-        ).await;
+        let resp = chat(app_data, web::Json(request)).await;
 
         assert!(resp.is_ok());
     }

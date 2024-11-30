@@ -1,4 +1,3 @@
-
 use actix_web::{HttpResponse, ResponseError};
 use serde::Serialize;
 use std::fmt;
@@ -28,11 +27,7 @@ pub struct ErrorResponse {
 impl ErrorResponse {
     /// Creates a new ErrorResponse instance.
     pub fn new(message: String, code: u16) -> Self {
-        Self {
-            error: message,
-            code,
-            timestamp: chrono::Utc::now().to_rfc3339(),
-        }
+        Self { error: message, code, timestamp: chrono::Utc::now().to_rfc3339() }
     }
 }
 

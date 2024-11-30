@@ -28,22 +28,14 @@ impl Config {
 
         // Add environment-specific configuration
         let env = std::env::var("RUN_ENV").unwrap_or_else(|_| "development".into());
-        settings = settings.add_source(
-            config::File::with_name(&format!("config/{}", env))
-                .required(false),
-        );
+        settings = settings
+            .add_source(config::File::with_name(&format!("config/{}", env)).required(false));
 
         // Add local configuration override
-        settings = settings.add_source(
-            config::File::with_name("config/local")
-                .required(false),
-        );
+        settings = settings.add_source(config::File::with_name("config/local").required(false));
 
         // Add environment variables with prefix "AUTOML_"
-        settings = settings.add_source(
-            config::Environment::with_prefix("AUTOML")
-                .separator("_"),
-        );
+        settings = settings.add_source(config::Environment::with_prefix("AUTOML").separator("_"));
 
         // Build configuration
         let settings = settings.build()?;
@@ -79,9 +71,9 @@ mod tests {
     fn test_config_defaults() {
         std::env::set_var("AUTOML_DATABASE_URL", "postgres://test:test@localhost/test");
         std::env::set_var("AUTOML_REDIS_URL", "redis://localhost:6379");
-        
+
         let config = Config::new().expect("Failed to load config");
-        
+
         assert_eq!(config.environment, Environment::Development);
         assert!(!config.is_production());
     }
@@ -89,10 +81,10 @@ mod tests {
     #[test]
     fn test_environment_override() {
         std::env::set_var("AUTOML_ENVIRONMENT", "production");
-        
+
         let config = Config::new().expect("Failed to load config");
-        
+
         assert_eq!(config.environment, Environment::Production);
         assert!(config.is_production());
     }
-} 
+}

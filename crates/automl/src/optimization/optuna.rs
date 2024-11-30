@@ -1,14 +1,17 @@
-use std::sync::Arc;
-use optuna::{Study, StudyDirection, Trial};
 use anyhow::Result;
+use chrono::{DateTime, Utc};
+use optuna::{Study, StudyDirection, Trial};
+use serde_json::Value;
+use std::collections::HashMap;
+use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{info, error};
+use tracing::{error, info};
 
-use crate::models::{
-    AutoMLConfig, TaskType, OptimizationConfig, SearchSpace,
-    ParameterRange, TrialResult, StudyResult, ModelMetrics,
-};
 use crate::errors::AutoMLError;
+use crate::models::{
+    AutoMLConfig, ModelMetrics, OptimizationConfig, ParameterRange, SearchSpace, StudyResult,
+    TaskType, TrialResult,
+};
 
 pub struct OptunaOptimizer {
     study: Arc<RwLock<Study>>,
@@ -25,10 +28,7 @@ impl OptunaOptimizer {
         let study = Study::create(study_direction)
             .map_err(|e| AutoMLError::OptimizationError(e.to_string()))?;
 
-        Ok(Self {
-            study: Arc::new(RwLock::new(study)),
-            config,
-        })
+        Ok(Self { study: Arc::new(RwLock::new(study)), config })
     }
 
     pub async fn optimize<F>(&self, objective: F) -> Result<StudyResult, AutoMLError>
@@ -50,16 +50,16 @@ impl OptunaOptimizer {
 
         for trial_number in 0..n_trials {
             info!("Starting trial {}/{}", trial_number + 1, n_trials);
-            
+
             let trial_start = chrono::Utc::now();
-            let trial = study.ask()
-                .map_err(|e| AutoMLError::OptimizationError(e.to_string()))?;
+            let trial = study.ask().map_err(|e| AutoMLError::OptimizationError(e.to_string()))?;
 
             let result = match objective(&trial) {
                 Ok(value) => {
-                    study.tell(trial.id, value)
+                    study
+                        .tell(trial.id, value)
                         .map_err(|e| AutoMLError::OptimizationError(e.to_string()))?;
-                    
+
                     TrialResult {
                         trial_id: trial.id.to_string(),
                         parameters: self.get_trial_params(&trial)?,
@@ -70,9 +70,10 @@ impl OptunaOptimizer {
                     }
                 }
                 Err(e) => {
-                    study.tell_failed(trial.id)
+                    study
+                        .tell_failed(trial.id)
                         .map_err(|e| AutoMLError::OptimizationError(e.to_string()))?;
-                    
+
                     TrialResult {
                         trial_id: trial.id.to_string(),
                         parameters: self.get_trial_params(&trial)?,
@@ -88,8 +89,8 @@ impl OptunaOptimizer {
         }
 
         // Get best trial
-        let best_trial = study.best_trial()
-            .map_err(|e| AutoMLError::OptimizationError(e.to_string()))?;
+        let best_trial =
+            study.best_trial().map_err(|e| AutoMLError::OptimizationError(e.to_string()))?;
 
         let best_trial_result = TrialResult {
             trial_id: best_trial.id.to_string(),
@@ -106,7 +107,8 @@ impl OptunaOptimizer {
             best_trial: best_trial_result,
             best_model_path: format!("models/best_model_{}.pt", study.id()),
             trials,
-            optimization_history: study.trials()
+            optimization_history: study
+                .trials()
                 .map_err(|e| AutoMLError::OptimizationError(e.to_string()))?
                 .iter()
                 .map(|t| t.value)
@@ -122,13 +124,15 @@ impl OptunaOptimizer {
 
         match &self.config.optimization_config.sampler_config.sampler_type {
             crate::models::SamplerType::TPE { n_ei_candidates } => {
-                study.set_sampler(TPESampler::new()
-                    .with_n_ei_candidates(*n_ei_candidates)
-                    .with_seed(self.config.optimization_config.sampler_config.seed));
+                study.set_sampler(
+                    TPESampler::new()
+                        .with_n_ei_candidates(*n_ei_candidates)
+                        .with_seed(self.config.optimization_config.sampler_config.seed),
+                );
             }
             crate::models::SamplerType::RandomSearch => {
                 study.set_sampler(RandomSampler::new(
-                    self.config.optimization_config.sampler_config.seed
+                    self.config.optimization_config.sampler_config.seed,
                 ));
             }
             crate::models::SamplerType::GridSearch => {
@@ -136,14 +140,18 @@ impl OptunaOptimizer {
                 unimplemented!("Grid search sampler not implemented yet");
             }
             crate::models::SamplerType::CmaEs { sigma } => {
-                study.set_sampler(CmaEsSampler::new()
-                    .with_sigma(*sigma)
-                    .with_seed(self.config.optimization_config.sampler_config.seed));
+                study.set_sampler(
+                    CmaEsSampler::new()
+                        .with_sigma(*sigma)
+                        .with_seed(self.config.optimization_config.sampler_config.seed),
+                );
             }
             _ => {
                 // Default to TPE
-                study.set_sampler(TPESampler::new()
-                    .with_seed(self.config.optimization_config.sampler_config.seed));
+                study.set_sampler(
+                    TPESampler::new()
+                        .with_seed(self.config.optimization_config.sampler_config.seed),
+                );
             }
         }
 
@@ -155,19 +163,33 @@ impl OptunaOptimizer {
 
         match &self.config.optimization_config.pruner_config.pruner_type {
             crate::models::PrunerType::MedianPruner => {
-                study.set_pruner(MedianPruner::new()
-                    .with_n_warmup_steps(self.config.optimization_config.pruner_config.n_warmup_steps)
-                    .with_n_min_trials(self.config.optimization_config.pruner_config.n_min_trials));
+                study.set_pruner(
+                    MedianPruner::new()
+                        .with_n_warmup_steps(
+                            self.config.optimization_config.pruner_config.n_warmup_steps,
+                        )
+                        .with_n_min_trials(
+                            self.config.optimization_config.pruner_config.n_min_trials,
+                        ),
+                );
             }
             crate::models::PrunerType::PercentilePruner { percentile } => {
-                study.set_pruner(PercentilePruner::new(*percentile)
-                    .with_n_warmup_steps(self.config.optimization_config.pruner_config.n_warmup_steps)
-                    .with_n_min_trials(self.config.optimization_config.pruner_config.n_min_trials));
+                study.set_pruner(
+                    PercentilePruner::new(*percentile)
+                        .with_n_warmup_steps(
+                            self.config.optimization_config.pruner_config.n_warmup_steps,
+                        )
+                        .with_n_min_trials(
+                            self.config.optimization_config.pruner_config.n_min_trials,
+                        ),
+                );
             }
             crate::models::PrunerType::HyperbandPruner { min_resource, reduction_factor } => {
-                study.set_pruner(HyperbandPruner::new()
-                    .with_min_resource(*min_resource)
-                    .with_reduction_factor(*reduction_factor));
+                study.set_pruner(
+                    HyperbandPruner::new()
+                        .with_min_resource(*min_resource)
+                        .with_reduction_factor(*reduction_factor),
+                );
             }
             crate::models::PrunerType::ThresholdPruner { lower, upper } => {
                 study.set_pruner(ThresholdPruner::new(*lower, *upper));
@@ -180,27 +202,26 @@ impl OptunaOptimizer {
         Ok(())
     }
 
-    fn get_trial_params(&self, trial: &Trial) -> Result<std::collections::HashMap<String, serde_json::Value>, AutoMLError> {
+    fn get_trial_params(
+        &self,
+        trial: &Trial,
+    ) -> Result<std::collections::HashMap<String, serde_json::Value>, AutoMLError> {
         let mut params = std::collections::HashMap::new();
-        
+
         for (name, range) in &self.config.optimization_config.search_space.parameters {
             let value = match range {
-                ParameterRange::Continuous { low, high, log } => {
-                    if *log {
-                        trial.suggest_log_float(name, *low, *high)
-                    } else {
-                        trial.suggest_float(name, *low, *high)
-                    }
-                    .map_err(|e| AutoMLError::OptimizationError(e.to_string()))?
+                ParameterRange::Continuous { low, high, log } => if *log {
+                    trial.suggest_log_float(name, *low, *high)
+                } else {
+                    trial.suggest_float(name, *low, *high)
                 }
-                ParameterRange::Discrete { low, high, step } => {
-                    trial.suggest_int(name, *low, *high, *step)
-                        .map_err(|e| AutoMLError::OptimizationError(e.to_string()))?
-                }
-                ParameterRange::Categorical { choices } => {
-                    trial.suggest_categorical(name, choices.as_slice())
-                        .map_err(|e| AutoMLError::OptimizationError(e.to_string()))?
-                }
+                .map_err(|e| AutoMLError::OptimizationError(e.to_string()))?,
+                ParameterRange::Discrete { low, high, step } => trial
+                    .suggest_int(name, *low, *high, *step)
+                    .map_err(|e| AutoMLError::OptimizationError(e.to_string()))?,
+                ParameterRange::Categorical { choices } => trial
+                    .suggest_categorical(name, choices.as_slice())
+                    .map_err(|e| AutoMLError::OptimizationError(e.to_string()))?,
             };
 
             params.insert(name.clone(), serde_json::to_value(value)?);
@@ -208,4 +229,4 @@ impl OptunaOptimizer {
 
         Ok(params)
     }
-} 
+}

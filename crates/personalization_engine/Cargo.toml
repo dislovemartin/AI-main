@@ -15,40 +15,37 @@ async-trait = "0.1"
 futures = "0.3"
 
 # Error handling
-thiserror = "1.0"
+thiserror = "2.0.3"
 anyhow = "1.0"
 
 # Logging and tracing
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
-# Database
-sqlx = { version = "0.7", features = [
+# Database and caching
+sqlx = { version = "0.8", features = [
     "runtime-tokio-rustls",
     "postgres",
     "json",
+    "chrono",
 ] }
 redis = { version = "0.23", features = ["tokio-comp"] }
 
-# Machine Learning
-tch = "0.13"      # PyTorch bindings
-ndarray = "0.15"  # N-dimensional arrays
-smartcore = "0.3" # Machine learning algorithms
-rand = "0.8"      # Random number generation
-
-# Graph Neural Networks
-petgraph = "0.6" # Graph data structures
-
-# Metrics and monitoring
-prometheus = "0.13"
-metrics = "0.20"
+# Machine Learning and Deep Learning
+tch = "0.18.0"          # PyTorch bindings
+ndarray = "0.16.1"      # N-dimensional arrays
+ndarray-stats = "0.6.0" # Statistical functions for ndarray
 
 # Common utilities
 common = { path = "../common" }
 shared = { path = "../shared" }
 
+# Metrics and monitoring
+prometheus = "0.13"
+metrics = "0.24.1"
+
 [dev-dependencies]
 tokio-test = "0.4"
-mockall = "0.11"
-criterion = "0.4"  # For benchmarking
-proptest = "1.0"   # Property testing
+mockall = "0.13.1"
+criterion = "0.5.1" # For benchmarking
+proptest = "1.5.0"  # Property testing

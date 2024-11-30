@@ -1,4 +1,3 @@
-
 //! Module: Shared
 //! Provides common utilities and error handling for the workspace.
 

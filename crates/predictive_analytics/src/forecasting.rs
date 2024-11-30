@@ -37,9 +37,7 @@ pub fn linear_trend_forecast(data: &[f64]) -> Option<f64> {
     let mean_x = (0..data.len()).map(|x| x as f64).sum::<f64>() / n;
     let mean_y = data.iter().sum::<f64>() / n;
 
-    let numerator: f64 = (0..data.len())
-        .map(|i| (i as f64 - mean_x) * (data[i] - mean_y))
-        .sum();
+    let numerator: f64 = (0..data.len()).map(|i| (i as f64 - mean_x) * (data[i] - mean_y)).sum();
 
     let denominator: f64 = (0..data.len()).map(|i| (i as f64 - mean_x).powi(2)).sum();
 

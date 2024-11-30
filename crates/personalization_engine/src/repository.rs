@@ -1,11 +1,11 @@
-use async_trait::async_trait;
-use sqlx::{Pool, Postgres};
 use anyhow::Result;
-use tch::Tensor;
-use std::sync::Arc;
+use async_trait::async_trait;
 use redis::Client as RedisClient;
+use sqlx::{Pool, Postgres};
+use std::sync::Arc;
+use tch::Tensor;
 
-use crate::models::{User, Item};
+use crate::models::{Item, User};
 
 #[async_trait]
 pub trait RecommendationRepository: Send + Sync {
@@ -186,10 +186,7 @@ impl RecommendationRepository for PostgresRepository {
         // Invalidate cache
         let mut redis_conn = self.redis.get_async_connection().await?;
         let cache_key = format!("user_features:{}", user_id);
-        redis::cmd("DEL")
-            .arg(&cache_key)
-            .query_async::<_, ()>(&mut redis_conn)
-            .await?;
+        redis::cmd("DEL").arg(&cache_key).query_async::<_, ()>(&mut redis_conn).await?;
 
         Ok(())
     }
@@ -215,4 +212,4 @@ impl RecommendationRepository for PostgresRepository {
 
         Ok(())
     }
-} 
+}

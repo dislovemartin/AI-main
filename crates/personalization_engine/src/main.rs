@@ -1,6 +1,6 @@
-use actix_web::{web, App, HttpServer};
+use actix_web::{App, HttpServer, web};
 use std::sync::Arc;
-use tracing::{info, Level};
+use tracing::{Level, info};
 use tracing_subscriber::FmtSubscriber;
 
 mod errors;
@@ -31,8 +31,8 @@ async fn main() -> std::io::Result<()> {
     // Initialize database connection
     let database_url = std::env::var("DATABASE_URL")
         .unwrap_or_else(|_| "postgres://postgres:postgres@localhost:5432/recommender".to_string());
-    let redis_url = std::env::var("REDIS_URL")
-        .unwrap_or_else(|_| "redis://localhost:6379".to_string());
+    let redis_url =
+        std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://localhost:6379".to_string());
 
     let repository = PostgresRepository::new(&database_url, &redis_url)
         .await
@@ -116,4 +116,4 @@ mod tests {
         let resp = test::call_service(&app, req).await;
         assert!(resp.status().is_success());
     }
-} 
+}

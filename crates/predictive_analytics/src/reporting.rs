@@ -16,11 +16,7 @@ pub fn generate_report(data: &[f64], file_path: &str) -> io::Result<()> {
     writeln!(file, "--------------------------")?;
     writeln!(file, "Data Points: {:?}", data)?;
 
-    if let Some(mean) = data
-        .iter()
-        .cloned()
-        .reduce(|a, b| a + b)
-        .map(|sum| sum / data.len() as f64)
+    if let Some(mean) = data.iter().cloned().reduce(|a, b| a + b).map(|sum| sum / data.len() as f64)
     {
         writeln!(file, "Mean Value: {:.2}", mean)?;
     } else {

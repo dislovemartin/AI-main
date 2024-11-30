@@ -1,4 +1,4 @@
-use actix_web::{get, post, web, HttpResponse, Responder};
+use actix_web::{HttpResponse, Responder, get, post, web};
 use log::info;
 use serde::Deserialize;
 use serde_json::json;
@@ -25,10 +25,7 @@ async fn chat_page() -> impl Responder {
 #[post("/chat")]
 async fn chat(message: web::Json<ChatMessage>) -> impl Responder {
     // Log the chat message details
-    info!(
-        "Chat message from user {}: {}",
-        message.user_id, message.message
-    );
+    info!("Chat message from user {}: {}", message.user_id, message.message);
 
     // #TODO: Implement storage or broadcasting of the chat message
 

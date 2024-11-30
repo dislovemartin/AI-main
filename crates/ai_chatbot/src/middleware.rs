@@ -1,5 +1,5 @@
 use actix_web::dev::{Service, ServiceRequest, ServiceResponse, Transform};
-use futures::future::{ok, Ready};
+use futures::future::{Ready, ok};
 use std::future::Future;
 use std::pin::Pin;
 use std::task::{Context, Poll};
