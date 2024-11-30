@@ -4,11 +4,61 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-common = { path = "../common" }
-serde = { version = "1.0.215", features = ["derive"] }
-serde_json = "1.0.133"
-log = "0.4.22"
-anyhow = "1.0.93"
-tokio = { version = "1.41.1", features = ["full"] }
+# Core dependencies
+tokio = { version = "1.0", features = ["full"] }
+actix-web = "4.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 
-# TODO: Add other dependencies as needed
+# Async traits and futures
+async-trait = "0.1"
+futures = "0.3"
+
+# Error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Logging and tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Database and caching
+sqlx = { version = "0.7", features = [
+    "runtime-tokio-rustls",
+    "postgres",
+    "json",
+    "chrono",
+] }
+redis = { version = "0.23", features = ["tokio-comp"] }
+
+# Machine Learning and Deep Learning
+tch = "0.13"          # PyTorch bindings
+ndarray = "0.15"      # N-dimensional arrays
+ndarray-stats = "0.5" # Statistical functions for ndarray
+linregress = "0.5"    # Linear regression
+statrs = "0.16"       # Statistical computations
+
+# Time series specific
+chrono = { version = "0.4", features = ["serde"] }
+time-series-analysis = "0.1"
+seasonal = "0.1"                                   # Seasonal decomposition
+prophet = "0.3"                                    # Facebook Prophet bindings
+
+# Feature engineering
+polars = { version = "0.32", features = ["lazy", "temporal"] }
+arrow = "42.0"
+
+# Metrics and monitoring
+prometheus = "0.13"
+metrics = "0.20"
+
+# Common utilities
+common = { path = "../common" }
+shared = { path = "../shared" }
+
+[dev-dependencies]
+tokio-test = "0.4"
+mockall = "0.11"
+criterion = "0.4"  # For benchmarking
+proptest = "1.0"   # Property testing
+approx = "0.5"     # Approximate floating point comparisons

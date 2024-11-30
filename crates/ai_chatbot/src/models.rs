@@ -1,99 +1,63 @@
-use crate::errors::AppError;
-use crate::utils::process_chat_message;
-use anyhow::{anyhow, Result};
-use chrono::Duration;
-use shared::RunError;
+use serde::{Deserialize, Serialize};
+use chrono::{DateTime, Utc};
 
-#[derive(Default)]
-pub struct Run;
-
-impl Run {
-    pub fn start_run(&self) -> Result<(), RunError> {
-        // Implementation
-        Ok(())
-    }
-
-    pub fn complete_run(&self) -> Result<(), RunError> {
-        // Implementation
-        Ok(())
-    }
-
-    pub fn require_action(&self) -> Result<(), RunError> {
-        // Implementation
-        Ok(())
-    }
-
-    pub fn submit_action(&self) -> Result<(), RunError> {
-        // Implementation
-        Ok(())
-    }
-
-    pub fn is_expired(&self) -> bool {
-        // Implementation
-        false
-    }
+/// Represents a chat message in the conversation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChatMessage {
+    /// The role of the message sender (e.g., "user", "assistant")
+    pub role: String,
+    /// The content of the message
+    pub content: String,
+    /// Optional metadata about the message
+    #[serde(default)]
+    pub metadata: Option<MessageMetadata>,
 }
 
-pub struct ChatModel {
-    run: Run,
+/// Metadata associated with a chat message
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MessageMetadata {
+    /// When the message was created
+    pub timestamp: DateTime<Utc>,
+    /// Optional user ID if authenticated
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub user_id: Option<String>,
+    /// Optional session ID for tracking conversations
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub session_id: Option<String>,
 }
 
-impl ChatModel {
-    pub fn new() -> Self {
-        Self { run: Run::default() }
-    }
-
-    pub fn start_run(&mut self) -> Result<(), AppError> {
-        self.run.start_run()?;
-        Ok(())
-    }
-
-    pub fn complete_run(&mut self) -> Result<(), AppError> {
-        self.run.complete_run()?;
-        Ok(())
-    }
-
-    pub fn require_action(&mut self) -> Result<(), AppError> {
-        self.run.require_action()?;
-        Ok(())
-    }
-
-    pub fn submit_action(&mut self) -> Result<(), AppError> {
-        self.run.submit_action()?;
-        Ok(())
-    }
-
-    pub fn require_client_input(&mut self, _response: String) -> Result<()> {
-        // Implementation
-        Ok(())
-    }
-
-    pub fn chat_session(&mut self) -> Result<(), AppError> {
-        if let Err(e) = self.run.start_run() {
-            return Err(anyhow!("Failed to start chat session run: {}", e).into());
-        }
-
-        // Additional logic...
-
-        if let Err(e) = self.run.complete_run() {
-            return Err(anyhow!("Failed to complete chat session run: {}", e).into());
-        }
-
-        Ok(())
-    }
+/// Response from the chat service
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ChatResponse {
+    /// The response message
+    pub message: ChatMessage,
+    /// Metadata about the response
+    pub metadata: ResponseMetadata,
 }
 
-impl From<RunError> for AppError {
-    fn from(err: RunError) -> Self {
-        match err {
-            RunError::Failed(msg) => AppError::InternalError(msg),
-            RunError::Expired => AppError::BadRequest("Run expired".to_string()),
-        }
-    }
+/// Metadata about the chat response
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ResponseMetadata {
+    /// When the response was generated
+    pub timestamp: DateTime<Utc>,
+    /// Version of the model used
+    pub model_version: String,
+    /// Processing time in milliseconds
+    pub processing_time_ms: u64,
+    /// Optional confidence score (0.0 to 1.0)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub confidence: Option<f32>,
 }
 
-// Define SessionData if it's used elsewhere
-#[derive(Default)]
-pub struct SessionData {
-    // Session data fields
+/// Configuration for the chat service
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChatConfig {
+    /// The model to use (e.g., "gpt-4")
+    pub model: String,
+    /// Maximum tokens in the response
+    pub max_tokens: usize,
+    /// Temperature for response generation
+    pub temperature: f32,
+    /// Whether to use streaming responses
+    pub stream: bool,
 }

@@ -1,5 +1,9 @@
 use anyhow::Result;
 use common::{Run, RunError, RunStatus};
+use serde::{Deserialize, Serialize};
+use chrono::{DateTime, Utc};
+use ndarray::Array2;
+use std::collections::HashMap;
 
 pub struct PredictiveModel {
     run: Run,
@@ -32,6 +36,173 @@ impl PredictiveModel {
 
         Ok(PredictionOutput { prediction: 42.0 })
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TimeSeries {
+    pub id: String,
+    pub values: Vec<f32>,
+    pub timestamps: Vec<DateTime<Utc>>,
+    pub metadata: TimeSeriesMetadata,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TimeSeriesMetadata {
+    pub name: String,
+    pub frequency: TimeSeriesFrequency,
+    pub tags: Vec<String>,
+    pub seasonality: Option<u32>,
+    pub additional_features: HashMap<String, Vec<f32>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum TimeSeriesFrequency {
+    Minutely,
+    Hourly,
+    Daily,
+    Weekly,
+    Monthly,
+    Quarterly,
+    Yearly,
+    Custom(String),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PredictionRequest {
+    pub series_id: String,
+    pub horizon: u32,
+    pub frequency: TimeSeriesFrequency,
+    pub include_history: bool,
+    pub confidence_level: Option<f32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PredictionResponse {
+    pub series_id: String,
+    pub predictions: Vec<f32>,
+    pub confidence_intervals: Option<Vec<(f32, f32)>>,
+    pub timestamps: Vec<DateTime<Utc>>,
+    pub metrics: PredictionMetrics,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PredictionMetrics {
+    pub mse: f32,
+    pub rmse: f32,
+    pub mae: f32,
+    pub mape: f32,
+    pub r2_score: f32,
+}
+
+// DeepAR Model Structures
+#[derive(Debug)]
+pub struct DeepARModel {
+    pub hidden_size: usize,
+    pub num_layers: usize,
+    pub dropout: f32,
+    pub learning_rate: f32,
+    pub likelihood: LikelihoodType,
+    pub context_length: usize,
+    pub prediction_length: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum LikelihoodType {
+    Gaussian,
+    NegativeBinomial,
+    StudentT,
+    Poisson,
+}
+
+// N-BEATS Model Structures
+#[derive(Debug)]
+pub struct NBEATSModel {
+    pub stack_types: Vec<NBEATSStackType>,
+    pub num_blocks: usize,
+    pub num_layers: usize,
+    pub layer_width: usize,
+    pub expansion_coefficient_dim: usize,
+    pub backcast_length: usize,
+    pub forecast_length: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum NBEATSStackType {
+    Trend,
+    Seasonality,
+    Generic,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ModelConfig {
+    pub model_type: ModelType,
+    pub training_config: TrainingConfig,
+    pub feature_config: FeatureConfig,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ModelType {
+    DeepAR(DeepARConfig),
+    NBEATS(NBEATSConfig),
+    Ensemble(Vec<ModelType>),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DeepARConfig {
+    pub hidden_size: usize,
+    pub num_layers: usize,
+    pub dropout: f32,
+    pub likelihood: LikelihoodType,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NBEATSConfig {
+    pub stack_types: Vec<NBEATSStackType>,
+    pub num_blocks: usize,
+    pub num_layers: usize,
+    pub layer_width: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TrainingConfig {
+    pub batch_size: usize,
+    pub epochs: usize,
+    pub learning_rate: f32,
+    pub early_stopping_patience: usize,
+    pub validation_split: f32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FeatureConfig {
+    pub use_time_features: bool,
+    pub use_holiday_features: bool,
+    pub custom_features: Vec<String>,
+    pub scaling_method: ScalingMethod,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ScalingMethod {
+    StandardScaler,
+    MinMaxScaler,
+    RobustScaler,
+    None,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TrainingMetrics {
+    pub loss_history: Vec<f32>,
+    pub validation_metrics: PredictionMetrics,
+    pub training_time: f32,
+    pub timestamp: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ModelArtifact {
+    pub model_id: String,
+    pub model_type: ModelType,
+    pub created_at: DateTime<Utc>,
+    pub metrics: TrainingMetrics,
+    pub config: ModelConfig,
 }
 
 #[cfg(test)]

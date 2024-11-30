@@ -1,0 +1,51 @@
+# Default configuration for AutoML service
+
+[database]
+url = "postgres://postgres:postgres@localhost:5432/automl"
+max_connections = 5
+idle_timeout = 300
+
+[redis]
+url = "redis://localhost:6379"
+pool_size = 5
+
+[server]
+host = "0.0.0.0"
+port = 8083
+workers = 4
+shutdown_timeout = 30
+
+[logging]
+level = "info"
+format = "json"
+
+[telemetry]
+jaeger_endpoint = "http://localhost:14268/api/traces"
+sampling_ratio = 0.1
+
+[metrics]
+port = 9091
+path = "/metrics"
+
+[optimization]
+max_trials = 100
+timeout_seconds = 3600
+n_jobs = -1            # Use all available cores
+
+[model]
+max_epochs = 100
+batch_size = 32
+learning_rate = 0.001
+early_stopping_patience = 10
+
+[security]
+cors_allowed_origins = ["http://localhost:3000"]
+rate_limit_requests = 100
+rate_limit_duration = 60                         # seconds
+
+[cache]
+ttl_seconds = 3600
+max_size = 1000
+
+[environment]
+name = "development"

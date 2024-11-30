@@ -1,11 +1,87 @@
-
 [package]
 name = "automl"
 version = "0.1.0"
 edition = "2021"
+authors = ["AI Team"]
+description = "AutoML module for automated machine learning optimization"
+license = "MIT"
 
 [dependencies]
-common = { path = "../common" }
-tokio = { version = "1.41.1", features = ["rt-multi-thread", "sync"] }
+# Core dependencies
+tokio = { version = "1.35", features = ["full"] }
+actix-web = "4.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 
-# Removed redundant dependencies like serde, prometheus, and log as they are provided by `common`.
+# Async traits and futures
+async-trait = "0.1"
+futures = "0.3"
+
+# Error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Logging and tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+opentelemetry = { version = "0.20", features = ["rt-tokio"] }
+opentelemetry-jaeger = "0.19"
+
+# Database and caching
+sqlx = { version = "0.7", features = [
+    "runtime-tokio-rustls",
+    "postgres",
+    "json",
+    "chrono",
+    "migrate",
+] }
+redis = { version = "0.24", features = ["tokio-comp", "connection-manager"] }
+
+# Machine Learning and AutoML
+tch = "0.13"      # PyTorch bindings
+optuna = "0.2"    # Hyperparameter optimization
+hyperopt = "0.3"  # Alternative hyperparameter optimization
+rand = "0.8"      # Random number generation
+ndarray = "0.15"  # N-dimensional arrays
+smartcore = "0.3" # Machine learning algorithms
+
+# Neural Architecture Search
+petgraph = "0.6" # Graph data structures for NAS
+
+# Metrics and monitoring
+prometheus = { version = "0.13", features = ["process"] }
+metrics = { version = "0.21", features = ["std"] }
+metrics-exporter-prometheus = "0.12"
+
+# Feature engineering
+polars = { version = "0.35", features = ["lazy", "random", "ndarray", "json"] }
+arrow = "49.0"
+
+# Common utilities
+common = { path = "../common" }
+shared = { path = "../shared" }
+
+# Parallel processing
+rayon = "1.8"     # Data parallelism
+crossbeam = "0.8" # Concurrent data structures
+
+# Security
+ring = "0.17"  # Cryptography
+argon2 = "0.5" # Password hashing
+
+# Configuration
+config = "0.13" # Configuration management
+dotenv = "0.15" # Environment variable management
+
+[dev-dependencies]
+tokio-test = "0.4"
+mockall = "0.12"
+criterion = { version = "0.5", features = ["async_tokio"] }
+proptest = "1.3"
+approx = "0.5"
+test-log = "0.2"
+wiremock = "0.5"
+
+[[bench]]
+name = "optimization_benchmarks"
+harness = false
