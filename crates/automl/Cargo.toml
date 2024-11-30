@@ -24,7 +24,7 @@ anyhow = "1.0"
 # Logging and tracing
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
-opentelemetry = { version = "0.21", features = ["rt-tokio"] }
+opentelemetry = { version = "0.21", features = ["rt-tokio-current-thread"] }
 opentelemetry-jaeger = "0.20"
 
 # Database and caching
