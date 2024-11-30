@@ -2,34 +2,84 @@ name: Monitoring
 
 on:
   schedule:
-    - cron: '*/15 * * * *'  # Every 15 minutes
+    - cron: '*/5 * * * *'  # Every 5 minutes
   workflow_dispatch:
 
 jobs:
   monitor:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Check API Health
-        run: |
-          chmod +x ./scripts/monitor_health.sh
-          ./scripts/monitor_health.sh
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Check Performance Metrics
+      - name: Check Infrastructure Services
         run: |
-          chmod +x ./scripts/monitor_performance.sh
-          ./scripts/monitor_performance.sh
+          # Check database connectivity
+          PGPASSWORD=${{ secrets.DB_PASSWORD }} psql -h ${{ secrets.DB_HOST }} -U ${{ secrets.DB_USER }} -c '\l'
+          
+          # Check Redis connectivity
+          redis-cli -h ${{ secrets.REDIS_HOST }} ping
+
+      - name: Check Core Services
+        run: |
+          # Check AI Chatbot
+          curl -f https://ai-chatbot.example.com/health || {
+            echo "AI Chatbot health check failed"
+            exit 1
+          }
+          
+          # Check Predictive Analytics
+          curl -f https://predictive-analytics.example.com/health || {
+            echo "Predictive Analytics health check failed"
+            exit 1
+          }
+
+      - name: Check Dependent Services
+        run: |
+          # Check Personalization Engine
+          curl -f https://personalization.example.com/health || {
+            echo "Personalization Engine health check failed"
+            exit 1
+          }
+          
+          # Check AutoML Service
+          curl -f https://automl.example.com/health || {
+            echo "AutoML Service health check failed"
+            exit 1
+          }
 
       - name: Collect Metrics
         run: |
-          # Example using Prometheus node_exporter or similar
-          curl -X POST http://localhost:9090/metrics -d @metrics.json
+          # Collect Prometheus metrics
+          curl -f https://prometheus.example.com/api/v1/query?query=up > metrics.json
+          
+          # Collect service-specific metrics
+          ./scripts/collect_metrics.sh ai-chatbot >> metrics.json
+          ./scripts/collect_metrics.sh predictive-analytics >> metrics.json
+          ./scripts/collect_metrics.sh personalization >> metrics.json
+          ./scripts/collect_metrics.sh automl >> metrics.json
 
-      - name: Send Alert on Failure
+      - name: Process and Store Metrics
+        run: |
+          # Process metrics and generate report
+          ./scripts/process_metrics.sh metrics.json > metrics_report.md
+          
+          # Store metrics in S3
+          aws s3 cp metrics.json s3://${{ secrets.METRICS_BUCKET }}/$(date +%Y-%m-%d)/metrics.json
+          aws s3 cp metrics_report.md s3://${{ secrets.METRICS_BUCKET }}/$(date +%Y-%m-%d)/report.md
+
+      - name: Alert on Failure
         if: failure()
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_MESSAGE: 'System monitoring detected issues!'
           SLACK_COLOR: 'danger'
+          SLACK_TITLE: 'Service Health Check Failed'
+          SLACK_MESSAGE: 'One or more services are not responding. Check the monitoring dashboard for details.'
+          SLACK_FOOTER: 'AI Platform Monitoring'

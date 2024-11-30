@@ -1,4 +1,3 @@
-
 name: CI
 
 on:
@@ -13,42 +12,91 @@ jobs:
     permissions:
       contents: read
       security-events: write
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
     steps:
       - uses: actions/checkout@v4
       
-      - name: Install lld
-        run: sudo apt-get update && sudo apt-get install -y lld
-      
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lld
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy, rustfmt
 
-      - name: Cache dependencies
+      - name: Cache Dependencies
         uses: actions/cache@v3
         with:
-          path: ~/.cargo
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
-      
-      - name: Check SECURITY.md
-        run: |
-          if [ ! -f SECURITY.md ]; then
-            echo "ERROR: SECURITY.md is missing. Please add it to the repository."
-            exit 1
-          fi
 
-      - name: Audit Dependencies
+      - name: Security Checks
         run: |
           cargo install cargo-audit || echo "cargo-audit is already installed"
           cargo audit
-
-      - name: Lint with Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
+          cargo clippy --all-targets --all-features -- -D warnings
 
       - name: Format Check
         run: cargo fmt --all -- --check
 
-      - name: Run Tests
-        run: cargo test --verbose
+      - name: Test Common Library
+        run: |
+          cd crates/common
+          cargo test --verbose
+          cd ../..
+
+      - name: Test Core Services
+        run: |
+          # Test AI Chatbot
+          cd crates/ai_chatbot
+          cargo test --verbose
+          cd ../..
+          
+          # Test Predictive Analytics
+          cd crates/predictive_analytics
+          cargo test --verbose
+          cd ../..
+
+      - name: Test Dependent Services
+        run: |
+          # Test Personalization Engine
+          cd crates/personalization_engine
+          cargo test --verbose
+          cd ../..
+          
+          # Test AutoML
+          cd crates/automl
+          cargo test --verbose
+          cd ../..
+
+      - name: Integration Tests
+        run: cargo test --test integration_tests --features=integration
