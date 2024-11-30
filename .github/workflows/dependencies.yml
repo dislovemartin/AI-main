@@ -1,0 +1,53 @@
+name: Dependency Management
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Run weekly
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  update-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Install Dependencies
+        run: |
+          cargo install cargo-audit
+          cargo install cargo-outdated
+
+      - name: Run Dependency Synchronization
+        run: |
+          cd crates/sync_versions
+          cargo run
+
+      - name: Check for Outdated Dependencies
+        run: cargo outdated
+
+      - name: Security Audit
+        run: cargo audit
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: Update dependencies"
+          title: "chore: Update dependencies"
+          body: |
+            This PR updates dependencies to their latest compatible versions.
+            
+            Changes:
+            - Synchronized dependency versions across workspace
+            - Updated outdated dependencies
+            - Ran security audit
+            
+            Please review the changes and merge if tests pass.
+          branch: dependency-updates
+          base: main
+          labels: dependencies 

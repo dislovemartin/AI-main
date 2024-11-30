@@ -4,7 +4,31 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    allowed:
+      - dependency-type: "direct"
+    ignore:
+      - dependency-name: "tokio"
+        versions: ["1.0.0"]
+    open-pull-requests-limit: 5
     groups:
-      dependencies:
+      infrastructure:
         patterns:
-          - "*"
+          - "tokio"
+          - "actix-web"
+          - "serde"
+          - "anyhow"
+          - "thiserror"
+      utilities:
+        patterns:
+          - "reqwest"
+          - "tracing"
+          - "redis"
+          - "prometheus"
+          - "chrono"
+      machine-learning:
+        patterns:
+          - "linfa*"
+          - "ndarray*"
+          - "smartcore"
+          - "statrs"
+          - "hyperopt"
