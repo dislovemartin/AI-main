@@ -1,0 +1,16 @@
+[database]
+url = "postgres://user:password@localhost/database"
+
+[server]
+host = "0.0.0.0"
+port = 8080
+
+[metrics]
+enabled = true
+endpoint = "/metrics"
+
+[i18n]
+supported_languages = ["en", "es", "fr", "de"]
+
+[accessibility]
+standards = ["WCAG 2.1"] 

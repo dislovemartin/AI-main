@@ -1,0 +1,9 @@
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-services-config
+  namespace: ai-services
+data:
+  LOG_LEVEL: "info"
+  GPU_MODE: "true"

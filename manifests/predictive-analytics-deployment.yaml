@@ -1,0 +1,26 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: predictive-analytics
+  labels:
+    app: predictive-analytics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: predictive-analytics
+  template:
+    metadata:
+      labels:
+        app: predictive-analytics
+    spec:
+      containers:
+        - name: predictive-analytics
+          image: your-docker-registry/predictive-analytics:latest
+          ports:
+            - containerPort: 8082
+          resources:
+            limits:
+              nvidia.com/gpu: 1
+---

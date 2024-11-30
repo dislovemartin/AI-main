@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Platform</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <meta name="theme-color" content="#76B900">
+</head>
+<body>
+    <div id="app">
+        <header class="header">
+            <nav class="nav">
+                <div class="nav-brand">
+                    <img src="/images/logo.svg" alt="AI Platform" class="nav-logo">
+                    <span>AI Platform</span>
+                </div>
+                <ul class="nav-menu">
+                    <li><a href="#dashboard" class="nav-link">Dashboard</a></li>
+                    <li><a href="#chat" class="nav-link">Chat</a></li>
+                    <li><a href="#feedback" class="nav-link">Feedback</a></li>
+                    <li>
+                        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+                            <i class="icon-theme"></i>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </header>
+        <main class="main">
+            <div id="loading" class="hidden">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">Loading...</p>
+            </div>
+            <div id="notification" class="hidden"></div>
+            <div id="content"></div>
+        </main>
+        <footer class="footer">
+            <div class="footer-content">
+                <p>&copy; 2024 AI Platform</p>
+                <nav class="footer-nav">
+                    <a href="#privacy">Privacy Policy</a>
+                    <a href="#terms">Terms of Service</a>
+                    <a href="#contact">Contact</a>
+                </nav>
+            </div>
+        </footer>
+    </div>
+    <script src="/js/api.js" type="module"></script>
+    <script src="/js/ui.js" type="module"></script>
+    <script src="/js/metrics.js" type="module"></script>
+    <script src="/js/router.js" type="module"></script>
+    <script src="/js/theme.js" type="module"></script>
+    <script src="/js/app.js" type="module"></script>
+</body>
+</html> 

@@ -1,0 +1,35 @@
+name: Monitoring
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'  # Every 15 minutes
+  workflow_dispatch:
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Check API Health
+        run: |
+          chmod +x ./scripts/monitor_health.sh
+          ./scripts/monitor_health.sh
+
+      - name: Check Performance Metrics
+        run: |
+          chmod +x ./scripts/monitor_performance.sh
+          ./scripts/monitor_performance.sh
+
+      - name: Collect Metrics
+        run: |
+          # Example using Prometheus node_exporter or similar
+          curl -X POST http://localhost:9090/metrics -d @metrics.json
+
+      - name: Send Alert on Failure
+        if: failure()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_MESSAGE: 'System monitoring detected issues!'
+          SLACK_COLOR: 'danger'

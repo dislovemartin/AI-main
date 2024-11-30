@@ -1,0 +1,26 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: content-creation-ai
+  labels:
+    app: content-creation-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: content-creation-ai
+  template:
+    metadata:
+      labels:
+        app: content-creation-ai
+    spec:
+      containers:
+        - name: content-creation-ai
+          image: your-docker-registry/content-creation-ai:latest
+          ports:
+            - containerPort: 8084
+          resources:
+            limits:
+              nvidia.com/gpu: 0
+---

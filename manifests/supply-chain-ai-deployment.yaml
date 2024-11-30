@@ -1,0 +1,26 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supply-chain-ai
+  labels:
+    app: supply-chain-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: supply-chain-ai
+  template:
+    metadata:
+      labels:
+        app: supply-chain-ai
+    spec:
+      containers:
+        - name: supply-chain-ai
+          image: your-docker-registry/supply-chain-ai:latest
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              nvidia.com/gpu: 1
+---

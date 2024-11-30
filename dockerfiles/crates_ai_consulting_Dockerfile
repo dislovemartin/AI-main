@@ -1,0 +1,21 @@
+FROM rust:latest AS builder
+
+WORKDIR /usr/src/app
+
+# Copy the Cargo.toml and lock files
+COPY Cargo.toml Cargo.lock ./
+
+# Copy the relevant crate directory
+COPY crates/ai_consulting ./crates/ai_consulting
+
+# Build the application
+RUN cargo build --release --package ai_consulting
+
+FROM debian:buster-slim
+
+# Copy the binary from the builder stage
+COPY --from=builder /usr/src/app/target/release/ai_consulting /usr/local/bin/ai_consulting
+
+EXPOSE 8080
+
+CMD ["ai_consulting"]

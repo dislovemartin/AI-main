@@ -1,0 +1,13 @@
+[package]
+name = "supply_chain_ai"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+common = { path = "../common" }
+anyhow = "1.0.93"
+thiserror = "2.0.3"
+tokio = { version = "1.41.1", features = ["full"] }
+serde = { version = "1.0.215", features = ["derive"] }
+
+#TODO: Add other dependencies as needed

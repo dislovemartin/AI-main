@@ -1,0 +1,66 @@
+name: Docker Security Scan
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'dockerfiles/**'
+      - '.github/workflows/docker-scan.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'dockerfiles/**'
+  schedule:
+    - cron: '0 0 * * 1'  # Weekly on Monday
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Build Docker images
+        run: |
+          mkdir -p scan-results
+          for dockerfile in dockerfiles/*; do
+            if [ -f "$dockerfile" ]; then
+              image_name="temp-image-$(basename "$dockerfile" .Dockerfile)"
+              echo "Building $image_name from $dockerfile"
+              docker build -f "$dockerfile" -t "$image_name" .
+              
+              # Run Trivy scan for each image individually
+              trivy image --format sarif --output "scan-results/$image_name.sarif" \
+                --severity HIGH,CRITICAL "$image_name"
+              
+              echo "$image_name" >> image_list.txt
+            fi
+          done
+          
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.47.0
+
+      - name: Combine SARIF reports
+        if: success() || failure()
+        run: |
+          jq -s 'reduce .[] as $item ({}; . * $item)' scan-results/*.sarif > trivy-results.sarif
+          
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Cleanup Temporary Images
+        if: always()
+        run: |
+          if [ -f image_list.txt ]; then
+            xargs docker rmi < image_list.txt || echo "Some images could not be removed."
+          fi

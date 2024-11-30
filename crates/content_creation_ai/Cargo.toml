@@ -1,0 +1,15 @@
+[package]
+name = "content_creation_ai"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+common = { path = "../common" }
+serde = { version = "1.0.215", features = ["derive"] }
+serde_json = "1.0.133"
+log = "0.4.22"
+anyhow = "1.0.93"
+tokio = { version = "1.41.1", features = ["full"] }
+rand = "0.8.5"
+
+#TODO: Add other dependencies as needed

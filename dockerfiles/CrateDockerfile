@@ -1,0 +1,30 @@
+# Use a specific stable Rust version to avoid unexpected breaking changes
+FROM rust:1.82.0 as builder
+
+# Build argument for crate name
+ARG CRATE_NAME
+
+# Create app directory
+WORKDIR /usr/src/app
+
+# Copy Cargo.toml and Cargo.lock
+COPY Cargo.toml Cargo.lock ./
+
+# Copy the specific crate's source code
+COPY crates/${CRATE_NAME}/ ./crates/${CRATE_NAME}/
+
+# Build the project in release mode with default features
+RUN cargo build --release --package ${CRATE_NAME}
+
+# Final runtime image
+FROM debian:buster-slim
+WORKDIR /usr/src/app
+
+# Copy the binary from the build stage
+COPY --from=builder /usr/src/app/target/release/${CRATE_NAME} .
+
+# Expose the port used by the service
+EXPOSE 8080
+
+# Command to run the service
+CMD ["./${CRATE_NAME}"] 

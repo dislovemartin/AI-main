@@ -1,0 +1,65 @@
+# Rust
+/target/
+**/*.rs.bk
+*.pdb
+Cargo.lock
+
+# IDE and Editor Files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment and Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+
+# Build and Debug
+debug/
+release/
+build/
+dist/
+
+# Logs and Diagnostics
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Coverage and Test Reports
+coverage/
+.coverage
+htmlcov/
+.tarpaulin-report.*
+
+# Documentation
+doc/
+docs/_build/
+
+# Temporary Files
+*.tmp
+*.temp
+.tmp/
+.temp/
+
+# Generated Files
+generated/
+*.generated.*

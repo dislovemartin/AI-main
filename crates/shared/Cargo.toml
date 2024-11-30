@@ -1,0 +1,32 @@
+[package]
+name = "shared"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+actix-web = { version = "4.9.0", optional = true }
+serde = { version = "1.0.215", features = ["derive"], optional = true }
+tracing = { version = "0.1.40", optional = true }
+tracing-subscriber = { version = "0.3.18", features = [
+    "env-filter",
+    "fmt",
+], optional = true }
+thiserror = { version = "2.0.3", optional = true }
+prometheus = { version = "0.13.4", optional = true }
+lazy_static = { version = "1.5.0", optional = true }
+
+# Define features to include optional dependencies
+[features]
+# **Default Features:** Enable essential functionalities by default.
+default = ["actix-web", "serde"]
+
+# **Optional Features:** Allow other crates or users to opt-in as needed.
+actix-web = ["actix-web"]
+serde = ["serde"]
+tracing = ["tracing"]
+tracing-subscriber = ["tracing-subscriber"]
+thiserror = ["thiserror"]
+prometheus = ["prometheus"]
+lazy_static = ["lazy_static"]
+
+# Add features for other dependencies as needed

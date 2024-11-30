@@ -1,0 +1,11 @@
+msrv = "1.70.0"
+cognitive-complexity-threshold = 25
+type-complexity-threshold = 250
+too-many-arguments-threshold = 8
+doc-valid-idents = ["OAuth", "GraphQL", "RESTful", "OpenAPI", "WebSocket"]
+disallowed-methods = []
+disallowed-names = []
+blacklisted-names = []
+avoid-breaking-exported-api = true
+upper-case-acronyms-aggressive = true
+enforce-iter-loop = true

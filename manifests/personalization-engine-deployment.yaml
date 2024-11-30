@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: personalization-engine
+  labels:
+    app: personalization-engine
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: personalization-engine
+  template:
+    metadata:
+      labels:
+        app: personalization-engine
+    spec:
+      containers:
+        - name: personalization-engine
+          image: your-docker-registry/personalization-engine:latest
+          ports:
+            - containerPort: 8088
+          resources:
+            limits:
+              nvidia.com/gpu: 1

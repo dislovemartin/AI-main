@@ -1,0 +1,12 @@
+[package]
+name = "vr_ar_ai"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+common = { path = "../common" }
+anyhow = "1.0.93"
+serde = { version = "1.0.215", features = ["derive"] }
+tokio = { version = "1.41.1", features = ["full"] }
+
+#TODO: Add other dependencies as needed

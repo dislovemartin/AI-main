@@ -1,0 +1,7 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'rust_services'
+    static_configs:
+      - targets: ['ai_consulting:8080', 'content_creation_ai:8084', 'supply_chain_ai:8080'] 

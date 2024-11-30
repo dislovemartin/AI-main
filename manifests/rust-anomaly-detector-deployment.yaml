@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rust-anomaly-detector
+  labels:
+    app: rust-anomaly-detector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rust-anomaly-detector
+  template:
+    metadata:
+      labels:
+        app: rust-anomaly-detector
+    spec:
+      containers:
+        - name: rust-anomaly-detector
+          image: your-docker-registry/rust-anomaly-detector:latest
+          ports:
+            - containerPort: 8087
+          resources:
+            limits:
+              nvidia.com/gpu: 1

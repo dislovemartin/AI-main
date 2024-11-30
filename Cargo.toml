@@ -1,0 +1,22 @@
+[workspace]
+members = [
+    "crates/ai_chatbot",
+    "crates/ai_consulting",
+    "crates/automl",
+    "crates/common",
+    "crates/content_creation_ai",
+    "crates/cpp_module",
+    "crates/cybersecurity_ai",
+    "crates/frontend",
+    "crates/go_recommender_service",
+    "crates/healthcare_ai",
+    "crates/metrics",
+    "crates/personalization_engine",
+    "crates/predictive_analytics",
+    "crates/python_service",
+    "crates/rust_anomaly_detector",
+    "crates/rust_service",
+    "crates/shared",
+    "crates/supply_chain_ai",
+    "crates/vr_ar_ai",
+]

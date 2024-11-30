@@ -1,0 +1,11 @@
+
+[package]
+name = "automl"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+common = { path = "../common" }
+tokio = { version = "1.41.1", features = ["rt-multi-thread", "sync"] }
+
+# Removed redundant dependencies like serde, prometheus, and log as they are provided by `common`.

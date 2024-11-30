@@ -1,0 +1,24 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_run:
+    workflows: ["CD"]
+    types:
+      - completed
+
+jobs:
+  integration-tests:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run Integration Tests
+        run: cargo test --test integration_tests --features=integration 

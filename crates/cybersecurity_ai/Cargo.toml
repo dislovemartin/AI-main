@@ -1,0 +1,13 @@
+
+[package]
+name = "cybersecurity_ai"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.93"
+tokio = { version = "1.41.1", features = ["rt-multi-thread", "sync"] }
+ring = "0.17.8"
+common = { path = "../common" }
+
+# Removed redundant dependencies like serde, tracing, and chrono as they are provided by `common`.

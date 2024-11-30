@@ -1,0 +1,25 @@
+
+# Base image with Rust and Cargo
+FROM rust:latest as builder
+
+# Create app directory
+WORKDIR /usr/src/app
+
+# Copy source code
+COPY . .
+
+# Build the project in release mode
+RUN cargo build --release
+
+# Final runtime image
+FROM debian:buster-slim
+WORKDIR /usr/src/app
+
+# Copy the binary from the build stage
+COPY --from=builder /usr/src/app/target/release/ai_chatbot .
+
+# Expose the port used by the service
+EXPOSE 8080
+
+# Command to run the service
+CMD ["./ai_chatbot"]

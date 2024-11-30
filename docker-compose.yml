@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  ai_consulting:
+    image: your-registry/ai_consulting:latest
+    ports:
+      - "8080:8080"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+
+  content_creation_ai:
+    image: your-registry/content_creation-ai:latest
+    ports:
+      - "8084:8080"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+
+  supply_chain_ai:
+    image: your-registry/supply_chain_ai:latest
+    ports:
+      - "8080:8080"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+
+  automl:
+    image: your-registry/automl:latest
+    ports:
+      - "8080:8080"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+
+  # Add other services similarly
+
+  frontend:
+    image: your-registry/frontend:latest
+    ports:
+      - "8081:8080"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0" 

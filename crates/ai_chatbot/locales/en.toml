@@ -1,0 +1,3 @@
+greeting = "Hello! How can I assist you today?"
+farewell = "Goodbye! Have a great day!"
+error_generic = "Sorry, something went wrong." 

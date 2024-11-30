@@ -1,0 +1,31 @@
+name: Cleanup
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 每天运行一次
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Action Code
+        uses: actions/checkout@v4
+
+      - name: Delete old workflow runs
+        run: |
+          OWNER="your-org-or-username"
+          REPO="your-repo-name"
+          gh api -X GET /repos/$OWNER/$REPO/actions/workflows | jq '.workflows[] | .id' | while read -r workflow_id; do
+            gh api -X GET /repos/$OWNER/$REPO/actions/workflows/$workflow_id/runs --paginate | jq '.workflow_runs[] | .id' | xargs -I{} gh api -X DELETE /repos/$OWNER/$REPO/actions/runs/{}
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete old container images
+        uses: snok/container-retention-policy@v2
+        with:
+          image-names: ai-platform
+          cut-off: '1 month ago'  # 使用有效的日期格式
+          account-type: personal
+          token: ${{ secrets.GITHUB_TOKEN }}

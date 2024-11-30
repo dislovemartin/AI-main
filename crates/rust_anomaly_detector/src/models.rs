@@ -1,0 +1,25 @@
+use anyhow::{Result, anyhow};
+use serde::{Serialize, Deserialize};
+
+/// Example model structure.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ExampleModel {
+    # Model parameters
+}
+
+impl ExampleModel {
+    pub fn new() -> Result<Self> {
+        // #TODO Initialize model parameters
+        Ok(ExampleModel {
+            // #TODO Initialize fields
+        })
+    }
+
+    pub fn predict(&self, input: &str) -> Result<String> {
+        # Implement prediction logic
+        if input.is_empty() {
+            return Err(anyhow!("Input is empty"));
+        }
+        Ok(format!("Prediction for '{}'", input))
+    }
+}

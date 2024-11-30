@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: healthcare-ai
+  labels:
+    app: healthcare-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: healthcare-ai
+  template:
+    metadata:
+      labels:
+        app: healthcare-ai
+    spec:
+      containers:
+        - name: healthcare-ai
+          image: your-docker-registry/healthcare-ai:latest
+          ports:
+            - containerPort: 8089
+          resources:
+            limits:
+              nvidia.com/gpu: 1

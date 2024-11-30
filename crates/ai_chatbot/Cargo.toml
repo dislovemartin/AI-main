@@ -1,0 +1,9 @@
+
+[package]
+name = "ai_chatbot"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+actix-web = { workspace = true, features = ["macros"] }
+shared = { path = "../shared" }
