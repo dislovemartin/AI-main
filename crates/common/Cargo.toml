@@ -1,20 +1,89 @@
-     [package]
-     name = "common"
-     version = "0.1.0"
-     edition = "2021"
+[package]
+name = "common"
+version = "0.1.0"
+edition = "2021"
 
-     [dependencies]
-     actix-web = "4.9.0"
-     anyhow = "1.0.93"
-     futures = "0.3.31"
-     lazy_static = "1.5.0"
-     log = "0.4.22"
-     prometheus = "0.13.4"
-     serde = { version = "1.0.215", features = ["derive"] }
-     tokio = { version = "1.41.1", features = ["full"] }
-     serde_json = "1.0.133"
-     thiserror = "2.0.3"
-     tracing = "0.1.40"
-     tracing-subscriber = "0.3.18"
-     uuid = { version = "1.11.0", features = ["v4"] }
-     chrono = { version = "0.4.38", features = ["serde"] }
+[dependencies]
+# Serialization
+serde = { version = "1.0.215", features = ["derive"], optional = true }
+serde_json = { version = "1.0.133", optional = true }
+
+# Async Runtime
+tokio = { version = "1.41.1", features = ["full"], optional = true }
+async-trait = { version = "0.1.83", optional = true }
+futures = { version = "0.3.31", optional = true }
+
+# Error Handling
+anyhow = { version = "1.0.48", optional = true }
+thiserror = { version = "2.0.3", optional = true }
+
+# Web Framework
+actix-web = { version = "4.4", optional = true }
+reqwest = { version = "0.11", features = [
+     "json",
+     "rustls-tls",
+], optional = true }
+
+# Logging and Metrics
+tracing = { version = "0.1.40", optional = true }
+tracing-subscriber = { version = "0.3", features = [
+     "env-filter",
+     "json",
+], optional = true }
+log = { version = "0.4.22", optional = true }
+prometheus = { version = "0.13.4", optional = true }
+
+# Database and Caching
+redis = { version = "0.24", features = [
+     "tokio-comp",
+     "connection-manager",
+], optional = true }
+
+# Utilities
+chrono = { version = "0.4.38", features = ["serde", "alloc"], optional = true }
+uuid = { version = "1.11.0", features = ["v4"], optional = true }
+lazy_static = { version = "1.5.0", optional = true }
+
+# Machine Learning
+linfa = { version = "0.5.1", optional = true }
+ndarray = { version = "0.15", optional = true }
+ndarray-stats = { version = "0.5", optional = true }
+linregress = { version = "0.5", optional = true }
+statrs = { version = "0.16", optional = true }
+smartcore = { version = "0.3", features = ["serde"], optional = true }
+hyperopt = { version = "0.0.17", optional = true }
+rand = { version = "0.8", optional = true }
+
+[features]
+default = ["full"]
+
+# Main feature groups
+full = [
+     "serialization",
+     "async_runtime",
+     "error_handling",
+     "web_framework",
+     "logging",
+     "database",
+     "utils",
+     "machine_learning",
+]
+
+# Individual feature groups
+serialization = ["serde", "serde_json"]
+async_runtime = ["tokio", "async-trait", "futures"]
+error_handling = ["anyhow", "thiserror"]
+web_framework = ["actix-web", "reqwest"]
+logging = ["tracing", "tracing-subscriber", "log", "prometheus"]
+database = ["redis"]
+utils = ["chrono", "uuid", "lazy_static"]
+machine_learning = [
+     "linfa",
+     "ndarray",
+     "ndarray-stats",
+     "linregress",
+     "statrs",
+     "smartcore",
+     "hyperopt",
+     "rand",
+]

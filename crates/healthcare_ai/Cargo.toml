@@ -4,11 +4,15 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-common = { path = "../common" }
-anyhow = "1.0.93"
-serde = { version = "1.0.215", features = ["derive"] }
-tokio = { version = "1.41.1", features = ["full"] }
-prometheus = "0.13.4"
-chrono = { version = "0.4.38", features = ["serde", "alloc"] }
+common = { path = "../common", features = [
+    "serialization",
+    "async_runtime",
+    "error_handling",
+    "web_framework",
+    "logging",
+    "database",
+    "utils",
+    "machine_learning",
+] }
 
-#TODO: Add other dependencies as needed
+# Add any crate-specific dependencies below

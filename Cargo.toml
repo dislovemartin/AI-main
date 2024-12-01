@@ -23,24 +23,4 @@ members = [
     "crates/sync_versions",
 ]
 
-[patch.crates-io]
-serde = { version = "1.0.215" }
-serde_json = { version = "1.0.133" }
-tokio = { version = "1.41.1", features = ["full"] }
-anyhow = { version = "1.0.93" }
-thiserror = { version = "2.0.3" }
-actix-web = { version = "4.4" }
-reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
-tracing = { version = "0.1.40" }
-tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
-redis = { version = "0.24", features = ["tokio-comp", "connection-manager"] }
-prometheus = { version = "0.13.4" }
-chrono = { version = "0.4.38", features = ["serde", "alloc"] }
-async-trait = { version = "0.1.83" }
-linfa = { version = "0.5.1" }
-linfa-anomaly = { version = "0.5.1" }
-ndarray = { version = "0.15" }
-ndarray-stats = { version = "0.5" }
-linregress = { version = "0.5" }
-statrs = { version = "0.16" }
-smartcore = { version = "0.3", features = ["serde"] }
+# Dependencies are now managed through the common crate

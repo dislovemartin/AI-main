@@ -1,13 +1,13 @@
+use anyhow::{Context, Result};
 use std::fs;
 use std::path::Path;
 use toml::Value;
-use anyhow::{Result, Context};
 
 const DEPENDENCIES: &[(&str, &str)] = &[
     ("serde", "1.0.215"),
     ("serde_json", "1.0.133"),
     ("tokio", "1.41.1"),
-    ("anyhow", "1.0.93"),
+    ("anyhow", "1.0.48"),
     ("thiserror", "2.0.3"),
     ("actix-web", "4.4"),
     ("reqwest", "0.11"),
@@ -19,7 +19,6 @@ const DEPENDENCIES: &[(&str, &str)] = &[
     ("async-trait", "0.1.83"),
     ("futures", "0.3"),
     ("linfa", "0.5.1"),
-    ("linfa-anomaly", "0.5.1"),
     ("ndarray", "0.15"),
     ("ndarray-stats", "0.5"),
     ("linregress", "0.5"),
@@ -64,49 +63,30 @@ fn main() -> Result<()> {
 
         let mut toml_val: Value = toml::from_str(&content)
             .with_context(|| format!("Failed to parse {}", cargo_toml_path))?;
-
         let mut updated = false;
 
-        // Update [dependencies]
-        if let Some(deps) = toml_val.get_mut("dependencies").and_then(|v| v.as_table_mut()) {
-            for (dep, ver) in DEPENDENCIES {
-                if deps.contains_key(*dep) {
-                    let dep_value = deps.get_mut(*dep).unwrap();
-                    match dep_value {
-                        Value::String(_) => {
-                            *dep_value = Value::String(ver.to_string());
-                            updated = true;
-                        }
-                        Value::Table(table) => {
-                            if table.contains_key("version") {
-                                table.insert("version".to_string(), Value::String(ver.to_string()));
-                                updated = true;
-                            }
-                        }
-                        _ => {}
-                    }
+        for (dep, ver) in DEPENDENCIES {
+            // Update [dependencies]
+            if let Some(deps) = toml_val.get_mut("dependencies") {
+                if deps.get(*dep).is_some() {
+                    deps[*dep] = Value::String(ver.to_string());
+                    updated = true;
                 }
             }
-        }
 
-        // Update [dev-dependencies]
-        if let Some(deps) = toml_val.get_mut("dev-dependencies").and_then(|v| v.as_table_mut()) {
-            for (dep, ver) in DEPENDENCIES {
-                if deps.contains_key(*dep) {
-                    let dep_value = deps.get_mut(*dep).unwrap();
-                    match dep_value {
-                        Value::String(_) => {
-                            *dep_value = Value::String(ver.to_string());
-                            updated = true;
-                        }
-                        Value::Table(table) => {
-                            if table.contains_key("version") {
-                                table.insert("version".to_string(), Value::String(ver.to_string()));
-                                updated = true;
-                            }
-                        }
-                        _ => {}
-                    }
+            // Update [dev-dependencies]
+            if let Some(deps) = toml_val.get_mut("dev-dependencies") {
+                if deps.get(*dep).is_some() {
+                    deps[*dep] = Value::String(ver.to_string());
+                    updated = true;
+                }
+            }
+
+            // Update [build-dependencies]
+            if let Some(deps) = toml_val.get_mut("build-dependencies") {
+                if deps.get(*dep).is_some() {
+                    deps[*dep] = Value::String(ver.to_string());
+                    updated = true;
                 }
             }
         }
@@ -136,7 +116,7 @@ mod tests {
     fn test_dependency_update() -> Result<()> {
         let dir = tempdir()?;
         let cargo_toml_path = dir.path().join("Cargo.toml");
-        
+
         let test_toml = r#"
 [package]
 name = "test_crate"
@@ -154,4 +134,4 @@ tokio = { version = "1.0.0", features = ["full"] }
         // TODO: Add test implementation
         Ok(())
     }
-} 
+}

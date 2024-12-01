@@ -1,12 +1,8 @@
-use std::io;
-use shared::SharedError;
-use thiserror::Error;
+use actix_web::{HttpResponse, error::ResponseError, http::StatusCode};
 use serde_json::json;
-use actix_web::{
-    error::ResponseError,
-    http::StatusCode,
-    HttpResponse,
-};
+use shared::SharedError;
+use std::io;
+use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum ChatbotError {
@@ -80,24 +76,25 @@ impl ResponseError for ChatbotError {
     fn error_response(&self) -> HttpResponse {
         let (status, error_type) = match self {
             // 400 Bad Request
-            Self::InvalidRequest(_) | Self::InvalidInput(_) => 
-                (StatusCode::BAD_REQUEST, "BAD_REQUEST"),
+            Self::InvalidRequest(_) | Self::InvalidInput(_) => {
+                (StatusCode::BAD_REQUEST, "BAD_REQUEST")
+            }
 
             // 401 Unauthorized
-            Self::AuthError(_) => 
-                (StatusCode::UNAUTHORIZED, "UNAUTHORIZED"),
+            Self::AuthError(_) => (StatusCode::UNAUTHORIZED, "UNAUTHORIZED"),
 
             // 429 Too Many Requests
-            Self::RateLimitExceeded => 
-                (StatusCode::TOO_MANY_REQUESTS, "RATE_LIMIT_EXCEEDED"),
+            Self::RateLimitExceeded => (StatusCode::TOO_MANY_REQUESTS, "RATE_LIMIT_EXCEEDED"),
 
             // 422 Unprocessable Entity
-            Self::ModelError(_) | Self::ConfigError(_) | Self::ContextWindowExceeded => 
-                (StatusCode::UNPROCESSABLE_ENTITY, "UNPROCESSABLE_ENTITY"),
+            Self::ModelError(_) | Self::ConfigError(_) | Self::ContextWindowExceeded => {
+                (StatusCode::UNPROCESSABLE_ENTITY, "UNPROCESSABLE_ENTITY")
+            }
 
             // 503 Service Unavailable
-            Self::ConnectionError(_) | Self::ModelNotLoaded | Self::ModelInitializationError(_) => 
-                (StatusCode::SERVICE_UNAVAILABLE, "SERVICE_UNAVAILABLE"),
+            Self::ConnectionError(_) | Self::ModelNotLoaded | Self::ModelInitializationError(_) => {
+                (StatusCode::SERVICE_UNAVAILABLE, "SERVICE_UNAVAILABLE")
+            }
 
             // 500 Internal Server Error
             _ => (StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR"),
@@ -117,10 +114,12 @@ impl ResponseError for ChatbotError {
             Self::InvalidRequest(_) | Self::InvalidInput(_) => StatusCode::BAD_REQUEST,
             Self::AuthError(_) => StatusCode::UNAUTHORIZED,
             Self::RateLimitExceeded => StatusCode::TOO_MANY_REQUESTS,
-            Self::ModelError(_) | Self::ConfigError(_) | Self::ContextWindowExceeded => 
-                StatusCode::UNPROCESSABLE_ENTITY,
-            Self::ConnectionError(_) | Self::ModelNotLoaded | Self::ModelInitializationError(_) => 
-                StatusCode::SERVICE_UNAVAILABLE,
+            Self::ModelError(_) | Self::ConfigError(_) | Self::ContextWindowExceeded => {
+                StatusCode::UNPROCESSABLE_ENTITY
+            }
+            Self::ConnectionError(_) | Self::ModelNotLoaded | Self::ModelInitializationError(_) => {
+                StatusCode::SERVICE_UNAVAILABLE
+            }
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

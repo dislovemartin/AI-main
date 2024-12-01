@@ -1,5 +1,4 @@
 /// Handles hyperparameter tuning for machine learning models.
-
 use crate::errors::AutoMLError;
 use crate::models::{OptimizationConfig, ParameterRange, TrialResult};
 use async_trait::async_trait;
@@ -50,13 +49,13 @@ impl BasicTuner {
 impl HyperParameterTuner for BasicTuner {
     async fn optimize(&self, config: &OptimizationConfig) -> Result<TrialResult, AutoMLError> {
         info!("Starting hyperparameter optimization");
-        
+
         let mut best_trial = None;
         let mut best_value = f64::INFINITY;
 
         for trial_id in 0..config.max_trials {
             let parameters = self.suggest_parameters().await?;
-            
+
             // Simulate model training with random value
             let mut rng = rand::thread_rng();
             let value = rng.gen_range(0.0..1.0);
@@ -65,7 +64,10 @@ impl HyperParameterTuner for BasicTuner {
                 best_value = value;
                 best_trial = Some(TrialResult {
                     trial_id: trial_id.to_string(),
-                    parameters: parameters.into_iter().map(|(k, v)| (k, serde_json::Value::from(v))).collect(),
+                    parameters: parameters
+                        .into_iter()
+                        .map(|(k, v)| (k, serde_json::Value::from(v)))
+                        .collect(),
                     value,
                     state: crate::models::TrialState::Completed,
                     datetime_start: chrono::Utc::now(),
@@ -95,18 +97,11 @@ mod tests {
     #[tokio::test]
     async fn test_basic_tuner() {
         let mut parameters = HashMap::new();
-        parameters.insert(
-            "learning_rate".to_string(),
-            ParameterConfig {
-                parameter_type: ParameterRange::Continuous {
-                    low: 0.0001,
-                    high: 0.1,
-                    log: true,
-                },
-                range: (0.0001, 0.1),
-                step: None,
-            },
-        );
+        parameters.insert("learning_rate".to_string(), ParameterConfig {
+            parameter_type: ParameterRange::Continuous { low: 0.0001, high: 0.1, log: true },
+            range: (0.0001, 0.1),
+            step: None,
+        });
 
         let config = OptimizationConfig {
             max_trials: 10,
@@ -136,20 +131,12 @@ mod tests {
         let tuner = BasicTuner::new(config);
 
         // Test continuous parameter sampling
-        let continuous = ParameterRange::Continuous {
-            low: 0.0,
-            high: 1.0,
-            log: false,
-        };
+        let continuous = ParameterRange::Continuous { low: 0.0, high: 1.0, log: false };
         let value = tuner.sample_parameter(&continuous).unwrap();
         assert!(value >= 0.0 && value <= 1.0);
 
         // Test discrete parameter sampling
-        let discrete = ParameterRange::Discrete {
-            low: 0,
-            high: 10,
-            step: 2,
-        };
+        let discrete = ParameterRange::Discrete { low: 0, high: 10, step: 2 };
         let value = tuner.sample_parameter(&discrete).unwrap();
         assert!(value >= 0.0 && value <= 10.0);
         assert_eq!(value % 2.0, 0.0);

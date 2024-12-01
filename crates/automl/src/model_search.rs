@@ -1,5 +1,5 @@
 use crate::errors::AutoMLError;
-use crate::models::{ModelConfig, ModelType, TaskType, AutoMLConfig};
+use crate::models::{AutoMLConfig, ModelConfig, ModelType, TaskType};
 use async_trait::async_trait;
 use std::collections::HashMap;
 use tracing::{info, warn};
@@ -34,11 +34,7 @@ impl AutoModelSearcher {
             _ => vec![ModelType::NeuralNetwork(Default::default())],
         };
 
-        Self {
-            task_type,
-            available_models,
-            evaluation_metric,
-        }
+        Self { task_type, available_models, evaluation_metric }
     }
 
     fn generate_model_configs(&self) -> Vec<ModelConfig> {
@@ -58,10 +54,10 @@ impl AutoModelSearcher {
 impl ModelSearcher for AutoModelSearcher {
     async fn search(&self, config: &AutoMLConfig) -> Result<Vec<ModelConfig>, AutoMLError> {
         info!("Starting model search for task type: {:?}", self.task_type);
-        
+
         let model_configs = self.generate_model_configs();
         let mut evaluated_models = Vec::new();
-        
+
         for model_config in model_configs {
             match self.evaluate_model(&model_config).await {
                 Ok(score) => {
@@ -79,7 +75,7 @@ impl ModelSearcher for AutoModelSearcher {
 
         // Sort models by score
         evaluated_models.sort_by(|(_, score1), (_, score2)| score1.partial_cmp(score2).unwrap());
-        
+
         Ok(evaluated_models.into_iter().map(|(config, _)| config).collect())
     }
 
@@ -89,7 +85,7 @@ impl ModelSearcher for AutoModelSearcher {
         // 1. Train the model with cross-validation
         // 2. Compute the specified evaluation metric
         // 3. Return the average score
-        
+
         match &model.model_type {
             ModelType::LightGBM(_) => Ok(0.85),
             ModelType::XGBoost(_) => Ok(0.86),
@@ -106,10 +102,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_model_search() {
-        let searcher = AutoModelSearcher::new(
-            TaskType::BinaryClassification,
-            "accuracy".to_string(),
-        );
+        let searcher =
+            AutoModelSearcher::new(TaskType::BinaryClassification, "accuracy".to_string());
 
         let config = AutoMLConfig {
             task_type: TaskType::BinaryClassification,
@@ -121,7 +115,7 @@ mod tests {
 
         let result = searcher.search(&config).await;
         assert!(result.is_ok());
-        
+
         let models = result.unwrap();
         assert!(!models.is_empty());
     }
